@@ -12,9 +12,11 @@ SRC			= 	$(foreach dir, $(SRC_DIR), $(foreach file, $(wildcard $(dir)/*.cpp), $(
 
 OBJ			=	$(addprefix $(OBJ_DIR)/, $(SRC:%.cpp=%.o))
 
+DEPS		=	$(OBJ:%.o=%.d)
+
 # Compilation flags
 
-CFLAGS		=	-Wall -Wextra -Werror -std=c++98
+CFLAGS		=	-Wall -Wextra -Werror -std=c++98 -g3
 
 IFLAGS		=	$(foreach dir, $(INC_DIR), -I $(dir))
 
@@ -38,7 +40,7 @@ $(NAME): $(OBJ)
 $(OBJ_DIR)/%.o : %.cpp
 	@echo "Compiling $@ ... \c"
 	@mkdir -p $(OBJ_DIR)
-	@$(CC) $(CFLAGS) $(IFLAGS) -o $@ -c $<
+	@$(CC) $(CFLAGS) $(IFLAGS) -MMD -o $@ -c $<
 	@echo "DONE"
 
 re:	fclean all
@@ -53,4 +55,6 @@ fclean:	clean
 	@rm -f $(NAME)
 	@echo "DONE\n-----"
 
-.PHONY: all show re clean flcean%
+.PHONY: all show re clean flcean
+
+-include $(DEPS)%
