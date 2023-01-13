@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:48:15 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/02 07:48:18 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/13 03:31:01 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,18 @@
 
 int main(int ac, char **av)
 {
-	(void)(av);
 	if (ac != 3)
-		std::cerr<<"Invalid args, exemple : ./ircserv <port> <password>."<<std::endl;
+	{
+		std::cerr << "Error:\tSpecify port and password: ./irc <port> <password>" << std::endl;
+		exit(EXIT_SUCCESS);
+	}
 	else
 	{
-		Server test;
-		test.init();
+		Server server(av[1], av[2]);
+		
+		server.BuildServer();
+		server.Running();
 	}
 	return (0);
-}
+	
+} 

@@ -1,60 +1,74 @@
-NAME		=	ircserv
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/01/13 02:16:29 by vahemere          #+#    #+#              #
+#    Updated: 2023/01/13 04:34:26 by vahemere         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-CC			=	c++
+NAME = irc
 
-SRC_DIR		=	$(shell find srcs -type d)
-INC_DIR		=	$(shell find includes -type d)
-OBJ_DIR		=	obj
+OBJS_DIR = objs
+SRCS_DIR = $(shell find srcs -type d)
 
-vpath %.cpp $(foreach dir, $(SRC_DIR), $(dir):)
+vpath %.cpp $(foreach dir, $(SRCS_DIR), $(dir))
+SRCS = main.cpp Server.cpp User.cpp \
 
-SRC			= 	$(foreach dir, $(SRC_DIR), $(foreach file, $(wildcard $(dir)/*.cpp), $(notdir $(file))))
+OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 
-OBJ			=	$(addprefix $(OBJ_DIR)/, $(SRC:%.cpp=%.o))
+DEPS = $(OBJS:%.o=%.d)
 
-DEPS		=	$(OBJ:%.o=%.d)
+CC = c++
+CFLAGS = -Wall -Wextra -Werror -std=c++98
 
-# Compilation flags
+#fonts color
+BLACK =      \033[30m
+RED =        \033[31m
+YELLOW =     \033[33m
+GREEN =      \033[32m
+BLUE =       \033[34m
+PURPLE =     \033[35m
+WHITE =      \033[7m
+END =        \033[0m
 
-CFLAGS		=	-Wall -Wextra -Werror -std=c++98 -g3
+all: $(NAME)
 
-IFLAGS		=	$(foreach dir, $(INC_DIR), -I $(dir))
+$(NAME) :  header compiling $(OBJS)
+	@$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+	@echo "$(PURPLE)] 100%$(END) \n\n$(YELLOW)-----$(END)\n\n$(PURPLE)./irc$(END) ✔️"
 
-#-------------------------------------------------------------------------------
+$(OBJS_DIR)/%.o : %.cpp
+	@mkdir -p $(OBJS_DIR)
+	@$(CC) $(CFLAGS) -MMD -o $@ -c $<
+	@echo -n "$(GREEN)██████$(END)"
+	
+clean :
+	@rm -rf $(OBJS_DIR)
+	@echo "$(GREEN)cleaning objs$(END)✔️"
 
-all:	$(NAME)
+fclean : header clean
+	@rm -rf $(NAME)
+	@echo "$(GREEN)cleaning ./irc$(END)✔️\n\n"
 
-show:
-	@echo "SRC :\n$(SRC)"
-	@echo "OBJ :\n$(OBJ)"
-	@echo "CFLAGS :\n$(CFLAGS)"
-	@echo "IFLAGS :\n$(IFLAGS)"
-	@echo "\n-----\n"
-	@echo "Compiling : \n$(CC) $(CFLAGS) $(OBJ) -o $(NAME) "
+re : fclean all
 
-$(NAME): $(OBJ)
-	@echo "-----\nCreating Binary File $@ ... \c"
-	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
-	@echo "DONE\n-----"
+header : 
+	@echo "\n\n$(YELLOW) (   (           (       (              (   	$(END)" 
+	@echo "$(YELLOW) )\ ))\ )  (     )\ )    )\ )           )\ ) 	$(END)" 
+	@echo "$(YELLOW)(()/(()/(  )\   (()/((  (()/((   (  (  (()/( 	$(END)" 
+	@echo "$(YELLOW) /(_))(_)|((_)   /(_))\  /(_))\  )\ )\  /(_))	$(END)" 
+	@echo "$(YELLOW)(_))(_)) )\___  (_))((_)(_))((_)((_|(_)(_))  	$(END)" 
+	@echo "$(PURPLE)|_ _| _ ((/ __| / __| __| _ \ \ / /| __| _ \ 		$(END)" 
+	@echo "$(PURPLE) | ||   /| (__  \__ \ _||   /\ V / | _||   / 		$(END)" 
+	@echo "$(PURPLE)|___|_|_\ \___| |___/___|_|_\ \_/  |___|_|_\ 		$(END)\n\n"
 
-$(OBJ_DIR)/%.o : %.cpp
-	@echo "Compiling $@ ... \c"
-	@mkdir -p $(OBJ_DIR)
-	@$(CC) $(CFLAGS) $(IFLAGS) -MMD -o $@ -c $<
-	@echo "DONE"
+compiling :
+	@echo -n "$(PURPLE)Compiling: [$(END)"
+	
+.PHONY: all clean fclean re header compiling
 
-re:	fclean all
-
-clean:
-	@echo "Deleting Objects Directory $(OBJ_DIR) ... \c"
-	@$(foreach file, $(OBJ), rm -rf $(file))
-	@echo "DONE\n-----"
-
-fclean:	clean
-	@echo "Deleting Binary File $(NAME) ... \c"
-	@rm -f $(NAME)
-	@echo "DONE\n-----"
-
-.PHONY: all show re clean flcean
-
--include $(DEPS)%
+-include $(DEPS)
