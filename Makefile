@@ -6,7 +6,7 @@
 #    By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/13 02:16:29 by vahemere          #+#    #+#              #
-#    Updated: 2023/01/13 04:34:26 by vahemere         ###   ########.fr        #
+#    Updated: 2023/01/13 14:48:32 by vahemere         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ OBJS_DIR = objs
 SRCS_DIR = $(shell find srcs -type d)
 
 vpath %.cpp $(foreach dir, $(SRCS_DIR), $(dir))
-SRCS = main.cpp Server.cpp User.cpp \
+SRCS = main.cpp Server.cpp  \
 
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 
@@ -44,7 +44,7 @@ $(NAME) :  header compiling $(OBJS)
 $(OBJS_DIR)/%.o : %.cpp
 	@mkdir -p $(OBJS_DIR)
 	@$(CC) $(CFLAGS) -MMD -o $@ -c $<
-	@echo -n "$(GREEN)██████$(END)"
+	@printf "$(GREEN)██████$(END)"
 	
 clean :
 	@rm -rf $(OBJS_DIR)
@@ -67,7 +67,7 @@ header :
 	@echo "$(PURPLE)|___|_|_\ \___| |___/___|_|_\ \_/  |___|_|_\ 		$(END)\n\n"
 
 compiling :
-	@echo -n "$(PURPLE)Compiling: [$(END)"
+	@printf "$(PURPLE)Compiling: [$(END)"
 	
 .PHONY: all clean fclean re header compiling
 
