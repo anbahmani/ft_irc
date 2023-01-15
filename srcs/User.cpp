@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:33:17 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/15 19:51:50 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,10 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
+std::string User::getRealname(void){
+	return this->realname;
+}
+
 e_event User::getEventHooked(void) {
 	return this->event_hooked;
 }
@@ -43,6 +47,11 @@ void User::setUsername(std::string username){
 
 void User::setNickname(std::string nickname){
 	this->nickname = nickname;
+	return ;
+}
+
+void User::setRealname(std::string realname){
+	this->realname = realname;
 	return ;
 }
 

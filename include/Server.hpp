@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:09:49 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/15 19:36:07 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,11 +46,11 @@ class Server
 
 // Commands
 
+int		user();
  /*
 int		cap();
 int		pass();
 int		nick();
-int		user();
 int		oper();
 int		mode();
 int     quit();

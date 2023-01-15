@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:28:38 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/15 19:51:02 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class User
 		int					fd;
 		std::string		username;
 		std::string		nickname;
+		std::string		realname;
 		e_event	event_hooked;
 
 	public:
@@ -36,11 +37,13 @@ class User
 		int	getFd(void);
 		std::string getUsername(void);
 		std::string getNickname(void);
+		std::string getRealname(void);
 		e_event 	getEventHooked(void);
 
 		// Setters
-		void setUsername(std::string);
-		void setNickname(std::string);
+		void setUsername(std::string username);
+		void setNickname(std::string nickname);
+		void setRealname(std::string realname);
 
 		// Specific methods
 		void incrEventHooked(void);
