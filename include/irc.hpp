@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/11 15:31:20 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/01/15 13:47:47 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,5 +26,31 @@
 # include "signal.h"
 
 #include <cstdio> // test
+
+// Commands
+
+ /*
+int		cap();
+int		pass();
+int		nick();
+int		user();
+int		oper();
+int		mode();
+int     quit();
+int		msg();
+int		join();
+int		part();
+int		ping();
+int		pong();
+int		topic();
+int		list();
+int		invite();
+int		kick();
+int		who();
+int		kill();
+int		wallops();
+int		notice();
+int		whois();
+*/
 
 #endif
