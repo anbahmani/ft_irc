@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/11 16:52:01 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/01/15 18:09:49 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,32 @@ class Server
 		socklen_t			_size;
 
 };
+
+// Commands
+
+ /*
+int		cap();
+int		pass();
+int		nick();
+int		user();
+int		oper();
+int		mode();
+int     quit();
+int		msg();
+int		join();
+int		part();
+int		ping();
+int		pong();
+int		topic();
+int		list();
+int		invite();
+int		kick();
+int		who();
+int		kill();
+int		wallops();
+int		notice();
+int		whois();
+*/
 
 // void Server::new_users()
 // {
