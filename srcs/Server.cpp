@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/13 03:34:52 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/01/15 14:54:37 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,41 @@ int	Server::get_server_socket(void) const
 	return (_server_socket);
 }
 
+void add_client(int server, int epoll_instance, int *num_sockets)
+{
+	//Socket pour le client
+	int           client;
+	
+	//Pour stocker l'adresse du client (necessaire pour la fonction accept())
+	sockaddr_in   addr_client;
+	
+	//Pour stocker la size de l'adresse client
+	socklen_t     addr_size = sizeof(addr_client);
+
+	//pour specifier les events du client
+	struct epoll_event client_event;
+
+
+
+	//On cree le socket client avec la fonction accept
+	client = accept(server, reinterpret_cast<sockaddr*>(&addr_client), &addr_size);
+
+	//On specifie les events	
+	client_event.events = EPOLLIN;
+	client_event.data.fd = client;
+
+	//On ajoute le client a epoll
+	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
+
+	//On incremente notre nombre de client
+  	(*num_sockets)++;
+	(void) (*num_sockets);
+}
+
 void	Server::BuildServer()
 {
+	struct epoll_event server_event;
+	char		buffer[1024];
 	// Creation socket
 	_server_socket = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET => adresse ip v4 || sock_stream protocole tcp
 	if (_server_socket < 0) 
@@ -52,9 +85,39 @@ void	Server::BuildServer()
 	if (listen(_server_socket, 1) < 0)
 		exit(EXIT_FAILURE);
 	
-	_client_fds.push_back(pollfd());
-	_client_fds[0].fd = _client;
-	_client_fds[0].events = POLLIN;
+	int rc = epoll_create(5);
+	memset(&server_event, 0, sizeof(server_event));
+	server_event.data.fd = _server_socket;
+	server_event.events = EPOLLIN;
+	epoll_ctl(rc, EPOLL_CTL_ADD, _server_socket, &server_event);
+	int num_socket = 1;
+	int num_event;
+	struct epoll_event events[100];
+	while (1)
+	{
+		num_event = epoll_wait(rc, events, num_socket, -1);
+		for (int i = 0; i < num_event; i++)
+		{
+			std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
+			if (events[i].data.fd == _server_socket) //si quelqu'un veut se connecter au serveur
+			{
+				add_client(_server_socket, rc, &num_socket);
+					/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
+			}
+			else //si l'event concerne un client qu'on a deja ajouter a epoll
+			{
+				//std::cerr<<"else isisisisisii"<<std::endl;
+				recv(events[i].data.fd, buffer, sizeof(buffer), 0);
+				// {
+				// 	std::cout << "Connection closed by client." << std::endl;
+				// 	return ;
+				// }
+				// else
+				std::cout<<"buffer => "<<buffer<<std::endl;
+			}
+		}
+    }
+	(void) (num_socket);
 }
 
 void	Server::Running(void)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:48:15 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/13 03:31:01 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/01/15 14:13:03 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ int main(int ac, char **av)
 		Server server(av[1], av[2]);
 		
 		server.BuildServer();
-		server.Running();
+		//server.Running();
 	}
 	return (0);
 	
