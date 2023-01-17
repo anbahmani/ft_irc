@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/17 22:22:15 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/01/17 22:48:34 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,42 @@ void add_client(int server, int epoll_instance, int *num_sockets)
 
 	//On ajoute le client a epoll
 	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
+	char		buffer[1024];
+	std::string	data;
+	if (client < 0)
+			std::cerr << "Error:\tConnection failed.";
+		while (true)
+		{
+			if (recv(client, buffer, sizeof(buffer), 0) <= 0)
+			{
+				std::cout << "Connection closed by client." << std::endl;
+				return ;
+			}
+			
+			data = buffer;
+		
+			if (data.find("CAP LS") != std::string::npos) 
+			{
+				std::cout << "client => server: " << data << std::endl;
+    			std::string response = "CAP * LS :multi-prefix\n";
+    			send(client, response.c_str(), response.length(), 0);
+    		}
+			
+			else if (data.find("PASS") != std::string::npos)
+			{
+				std::cout << "client => server: " << data << std::endl;
+    			if (data.find("1234") != std::string::npos)
+				{
+    			    std::string response = ":localhost:1500 001 brhajji- :wsh\n";
+    			    send(client, response.c_str(), response.length(), 0);
+    			} 
+				else
+				{
+    			    std::string response = "PASS rejected\n";
+    			    send(client, response.c_str(), response.length(), 0);
+    			}
+			}
+		}
 
 	//On incremente notre nombre de client
   	(*num_sockets)++;
