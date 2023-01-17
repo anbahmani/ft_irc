@@ -16,30 +16,30 @@
 		return ;
 	}
 
-	// Getters
+	// // Getters
 
-	std::string Command::getName(void){
-		return this->_name;
-	}
+	// std::string Command::getName(void){
+	// 	return this->_name;
+	// }
 
-	std::vector<std::string> Command::getParameters(void){
-		return this->_parameters;
-	}
+	// std::vector<std::string> Command::getParameters(void){
+	// 	return this->_parameters;
+	// }
 
-	// Setters
+	// // Setters
 
-	void Command::setName(std::string name){
-		this->_name = name;
-		return ;
-	}
+	// void Command::setName(std::string name){
+	// 	this->_name = name;
+	// 	return ;
+	// }
 
-	void Command::setParamters(std::vector<std::string> parameters){
-		this->paramters =  parameters;
-		return ;
-	}
+	// void Command::setParamters(std::vector<std::string> parameters){
+	// 	this->paramters =  parameters;
+	// 	return ;
+	// }
 
-	// Parameters methods
+	// // Parameters methods
 
-	void addParamter(std::string parameter) {
-		this->parameters.push_back(parameter);
-	}
+	// void addParamter(std::string parameter) {
+	// 	this->parameters.push_back(parameter);
+	// }

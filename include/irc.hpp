@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:25:53 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/17 22:33:37 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,9 @@
 # include <sys/epoll.h>
 # include "signal.h"
 
-#include <cstdio> // test
-
+#include "Server.hpp"
+class Server;
+int	pass(char *buf, Server const &server, int client);
 
 enum e_event { 
 	CAP_HOOKED,

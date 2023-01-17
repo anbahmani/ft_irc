@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:09:49 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/17 21:21:45 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ class Server
 
 		struct sockaddr_in	get_struct_sockaddr(void) const;
 		int					get_server_socket(void) const;
+		int					get_client_socket(void) const;
+		std::string			getServerPassword(void) const;
 
 	private:
 	
@@ -39,7 +41,7 @@ class Server
 		int					_server_socket;
 		int					_client;
 		int 				_portNum;
-		std::string			_password;
+		std::string			_passwordServer;
 		socklen_t			_size;
 
 };

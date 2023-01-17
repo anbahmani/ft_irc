@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 14:54:37 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/17 22:22:15 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 
-Server::Server(char *port, std::string pass) : _portNum(atoi(port)), _password(pass)  {}
+Server::Server(char *port, std::string pass) : _portNum(atoi(port)), _passwordServer(pass){}
 
 Server::~Server() {}
 
@@ -25,6 +25,10 @@ int	Server::get_server_socket(void) const
 {
 	return (_server_socket);
 }
+
+std::string	Server::getServerPassword() const { return this->_passwordServer; }
+
+int	Server::get_client_socket() const { return this->_client; }
 
 void add_client(int server, int epoll_instance, int *num_sockets)
 {
@@ -108,6 +112,7 @@ void	Server::BuildServer()
 			{
 				//std::cerr<<"else isisisisisii"<<std::endl;
 				recv(events[i].data.fd, buffer, sizeof(buffer), 0);
+				pass(buffer, *this, events[i].data.fd);
 				// {
 				// 	std::cout << "Connection closed by client." << std::endl;
 				// 	return ;
@@ -152,7 +157,7 @@ void	Server::Running(void)
 			else if (data.find("PASS") != std::string::npos)
 			{
 				std::cout << "client => server: " << data << std::endl;
-    			if (data.find(_password) != std::string::npos)
+    			if (data.find(_passwordServer) != std::string::npos)
 				{
     			    std::string response = "PASS accepted\n";
     			    send(_client, response.c_str(), response.length(), 0);
