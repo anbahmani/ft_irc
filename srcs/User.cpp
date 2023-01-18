@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:33:17 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/18 06:08:08 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,9 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
-e_event User::getEventHooked(void) {
-	return this->event_hooked;
-}
+// e_event User::getEventHooked(void) {
+// 	return this->event_hooked;
+// }
 
 // Setters
 
@@ -48,6 +48,6 @@ void User::setNickname(std::string nickname){
 
 // Specifics methods
 
-void User::incrEventHooked(void){
-	this->event_hooked = static_cast<e_event>(this->event_hooked + 1);
-}
+// void User::incrEventHooked(void){
+// 	this->event_hooked = static_cast<e_event>(this->event_hooked + 1);
+// }

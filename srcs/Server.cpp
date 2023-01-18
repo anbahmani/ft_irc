@@ -6,13 +6,13 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/17 15:31:01 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/18 06:16:36 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 
-Server::Server(char *port, std::string pass) : _portNum(atoi(port)), _password(pass)  {}
+Server::Server(char *port, std::string pass) : _portNum(port), _password(pass)  {}
 
 Server::~Server() {}
 
@@ -26,8 +26,11 @@ int	Server::get_server_socket(void) const
 	return (_server_socket);
 }
 
-void add_client(int server, int epoll_instance, int *num_sockets)
-{
+void Server::add_client(int server, int epoll_instance, int *num_sockets)
+{	
+	//nb de char lu
+	int				rc;
+	
 	//Socket pour le client
 	int           client;
 	
@@ -40,8 +43,6 @@ void add_client(int server, int epoll_instance, int *num_sockets)
 	//pour specifier les events du client
 	struct epoll_event client_event;
 
-
-
 	//On cree le socket client avec la fonction accept
 	client = accept(server, reinterpret_cast<sockaddr*>(&addr_client), &addr_size);
 
@@ -51,43 +52,74 @@ void add_client(int server, int epoll_instance, int *num_sockets)
 
 	//On ajoute le client a epoll
 	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
+	
+	//On instancie un nouvel utilisateur
+	User *user = new User(addr_client, client);
+	
 	char		buffer[1024];
 	std::string	data;
 	if (client < 0)
 			std::cerr << "Error:\tConnection failed.";
-		while (true)
+	while (true)
+	{
+		rc = recv(client, buffer, sizeof(buffer), 0);
+		if (rc <= 0)
 		{
-			if (recv(client, buffer, sizeof(buffer), 0) <= 0)
+			std::cout << "Connection closed by client." << std::endl;
+			return ;
+		}
+		buffer[rc] = 0;
+		data = buffer;
+		std::cout<<"=>>>>"<<data<<std::endl;
+		if (data.find("CAP LS") != std::string::npos) 
+		{
+			//std::cout << "client => server: " << data << std::endl;
+    		std::string response = "CAP * LS :multi-prefix\n";
+    		send(client, response.c_str(), response.length(), 0);
+    	}
+		if (data.find("CAP REQ") != std::string::npos) 
+		{
+			//std::cout << "client => server: " << data << std::endl;
+    		std::string response = "CAP * ACK multi-prefix\n";
+    		send(client, response.c_str(), response.length(), 0);
+    	}
+		if (data.find("PASS") != std::string::npos && !(data.find(_password) != std::string::npos))
+		{
+			//std::cout << "client => server: " << data << std::endl;
+    	    std::string response = "PASS rejected\n";
+    	    send(client, response.c_str(), response.length(), 0);
+			epoll_ctl(epoll_instance, EPOLL_CTL_DEL, client, &client_event);
+			return ;
+		}
+		if (data.find("NICK") != std::string::npos)
+		{
+			//On check si le nickname est deja utilise
+			if (_users.find(buffer+5) != _users.end())
 			{
-				std::cout << "Connection closed by client." << std::endl;
+				std::string response = "NickName already used.\n";
+    		    send(client, response.c_str(), response.length(), 0);
+				//Suppresion du socket de l'epoll
+				epoll_ctl(epoll_instance, EPOLL_CTL_DEL, client, &client_event);
+				close(client);
+				delete user;
 				return ;
 			}
-			
-			data = buffer;
-		
-			if (data.find("CAP LS") != std::string::npos) 
-			{
-				std::cout << "client => server: " << data << std::endl;
-    			std::string response = "CAP * LS :multi-prefix\n";
-    			send(client, response.c_str(), response.length(), 0);
-    		}
-			
-			else if (data.find("PASS") != std::string::npos)
-			{
-				std::cout << "client => server: " << data << std::endl;
-    			if (data.find("1234") != std::string::npos)
-				{
-    			    std::string response = ":localhost:1500 001 brhajji- :wsh\n";
-    			    send(client, response.c_str(), response.length(), 0);
-    			} 
-				else
-				{
-    			    std::string response = "PASS rejected\n";
-    			    send(client, response.c_str(), response.length(), 0);
-    			}
-			}
+			else
+				user->setNickname(buffer+5);
 		}
-
+		if (data.find("USER") != std::string::npos)
+			user->setUsername(buffer + data.find(":"));
+		if (data.find("CAP END") != std::string::npos)
+			break ;
+	}
+	//On prepare la reponse d'authentification
+	std::string response = ":localhost:"+_portNum+" 001 "+user->getNickname()+": Bienvenue sur Chat Irc\n";
+    
+	std::cout<<"rep = "<<response<<std::endl;
+	
+	send(client, response.c_str(), response.length(), 0);
+	//On ajoute le User a la map
+	_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 	//On incremente notre nombre de client
   	(*num_sockets)++;
 	(void) (*num_sockets);
@@ -97,6 +129,7 @@ void	Server::BuildServer()
 {
 	struct epoll_event server_event;
 	char		buffer[1024];
+	int			tmp = 0;
 	// Creation socket
 	_server_socket = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET => adresse ip v4 || sock_stream protocole tcp
 	if (_server_socket < 0) 
@@ -109,7 +142,7 @@ void	Server::BuildServer()
 	// Configuration socket
 	_server_addr.sin_family = AF_INET;
 	_server_addr.sin_addr.s_addr = htons(INADDR_ANY);	//inet_addr("127.0.0.1")
-	_server_addr.sin_port = htons(_portNum);
+	_server_addr.sin_port = htons(atoi(_portNum.c_str()));
 	if ((bind(_server_socket, (struct sockaddr*)&_server_addr,sizeof(_server_addr))) < 0) 
 	{
 		std::cout << "Error:\tbinding connection failed." << std::endl;
@@ -129,76 +162,39 @@ void	Server::BuildServer()
 	int num_socket = 1;
 	int num_event;
 	struct epoll_event events[100];
+	std::string	str;
+
 	while (1)
 	{
 		num_event = epoll_wait(rc, events, num_socket, -1);
 		for (int i = 0; i < num_event; i++)
 		{
-			std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
+			//std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
 			if (events[i].data.fd == _server_socket) //si quelqu'un veut se connecter au serveur
 			{
 				add_client(_server_socket, rc, &num_socket);
-					/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
+				/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
 			}
 			else //si l'event concerne un client qu'on a deja ajouter a epoll
 			{
 				//std::cerr<<"else isisisisisii"<<std::endl;
-				recv(events[i].data.fd, buffer, sizeof(buffer), 0);
-				// {
-				// 	std::cout << "Connection closed by client." << std::endl;
-				// 	return ;
-				// }
-				// else
+				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
+					
+				if(tmp > 0)
+				{
+					buffer[tmp] = 0;
+					str = buffer;
+				}
+				else if (tmp <= 0 || str.find("QUIT :leaving") != std::string::npos)
+				{
+					std::cout << "Connection closed by client." << std::endl;
+					//Suppresion du socket de l'epoll
+					epoll_ctl(rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
+					close(events[i].data.fd);
+				}
 				std::cout<<"buffer => "<<buffer<<std::endl;
 			}
 		}
     }
 	(void) (num_socket);
-}
-
-void	Server::Running(void)
-{
-	char		buffer[1024];
-	std::string	data;
-	
-	// std::cout << "ici" << std::endl;
-	while (true)
-	{
-		_size = sizeof(_server_addr);
-		_client = accept(_server_socket, (struct sockaddr*)&_server_addr, &_size);
-		if (_client < 0)
-			std::cerr << "Error:\tConnection failed.";
-		while (true)
-		{
-			if (recv(_client, buffer, sizeof(buffer), 0) <= 0)
-			{
-				std::cout << "Connection closed by client." << std::endl;
-				return ;
-			}
-			
-			data = buffer;
-		
-			if (data.find("CAP LS") != std::string::npos) 
-			{
-				std::cout << "client => server: " << data << std::endl;
-    			std::string response = "CAP * LS :multi-prefix\n";
-    			send(_client, response.c_str(), response.length(), 0);
-    		}
-			
-			else if (data.find("PASS") != std::string::npos)
-			{
-				std::cout << "client => server: " << data << std::endl;
-    			if (data.find(_password) != std::string::npos)
-				{
-    			    std::string response = "PASS accepted\n";
-    			    send(_client, response.c_str(), response.length(), 0);
-    			} 
-				else
-				{
-    			    std::string response = "PASS rejected\n";
-    			    send(_client, response.c_str(), response.length(), 0);
-    			}
-			}
-		}
-	}
 }

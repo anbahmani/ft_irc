@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:09:49 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/18 02:21:23 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include "irc.hpp"
 # include "User.hpp"
 
+class User;
+
 class Server
 {
 	public:
@@ -25,23 +27,20 @@ class Server
 		~Server();
 		
 		void	BuildServer();
-		void	Running();
 		// void new_users();
 
 		struct sockaddr_in	get_struct_sockaddr(void) const;
 		int					get_server_socket(void) const;
+		void add_client(int server, int epoll_instance, int *num_sockets);
 
 	private:
 	
 		std::vector<pollfd> _client_fds;
-		// std::vector<User *>	_users;
+		std::map<std::string, User *>	_users;
 		struct sockaddr_in	_server_addr;
 		int					_server_socket;
-		int					_client;
-		int 				_portNum;
+		std::string			_portNum;
 		std::string			_password;
-		socklen_t			_size;
-
 };
 
 // Commands

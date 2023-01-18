@@ -6,7 +6,7 @@
 #    By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/13 02:16:29 by vahemere          #+#    #+#              #
-#    Updated: 2023/01/15 14:15:53 by brhajji-         ###   ########.fr        #
+#    Updated: 2023/01/18 01:58:21 by brhajji-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ OBJS_DIR = objs
 SRCS_DIR = $(shell find srcs -type d)
 
 vpath %.cpp $(foreach dir, $(SRCS_DIR), $(dir))
-SRCS = main.cpp Server.cpp  \
+SRCS = main.cpp Server.cpp  User.cpp\
 
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 

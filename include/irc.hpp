@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/15 18:25:53 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/01/18 02:21:38 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,11 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <vector>
+# include <map>
 # include <poll.h>
 # include <sys/epoll.h>
-# include "signal.h"
+# include "User.hpp"
+# include "Server.hpp"
 
 #include <cstdio> // test
 
