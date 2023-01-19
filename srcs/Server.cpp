@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/18 06:21:33 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/19 19:01:32 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,17 @@ struct sockaddr_in	Server::get_struct_sockaddr(void) const
 int	Server::get_server_socket(void) const
 {
 	return (_server_socket);
+}
+
+User				*Server::get_user_by_fd(int fd)
+{
+	std::map<std::string, User*>::iterator it;
+	for (it = this->_users.begin(); it != _users.end(); it++)
+	{
+		if (fd == it->second->getFd())
+			return (it->second);	
+	}
+	return (NULL);
 }
 
 void Server::add_client(int server, int epoll_instance, int *num_sockets)
@@ -54,7 +65,7 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets)
 	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
 	
 	//On instancie un nouvel utilisateur
-	User *user = new User(addr_client, client);
+	User *user = new User(client);
 	
 	char		buffer[1024];
 	std::string	data;
@@ -118,6 +129,11 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets)
 	std::cout<<"rep = "<<response<<std::endl;
 	
 	send(client, response.c_str(), response.length(), 0);
+	response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\n";
+	send(client, response.c_str(), response.length(), 0);
+	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023\n";
+	send(client, response.c_str(), response.length(), 0);
+	
 	//On ajoute le User a la map
 	_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 	//On incremente notre nombre de client
@@ -188,9 +204,20 @@ void	Server::BuildServer()
 				else if (tmp <= 0 || str.find("QUIT :leaving") != std::string::npos)
 				{
 					std::cout << "Connection closed by client." << std::endl;
+					std::cout<<"je test"<<std::endl;
 					//Suppresion du socket de l'epoll
 					epoll_ctl(rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
 					close(events[i].data.fd);
+				}
+				else if (tmp <= 0 || str.find("PING") != std::string::npos)
+				{
+					std::string response = "PONG localhost:" + _portNum;
+					send(events[i].data.fd, response.c_str(), response.length(), 0);
+					std::cout<<response<<std::endl;
+				}
+				else if (str.find("PART localhost") != std::string::npos)
+				{
+					
 				}
 				std::cout<<"buffer => "<<buffer<<std::endl;
 			}

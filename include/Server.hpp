@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/18 06:22:45 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/19 17:15:05 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ class Server
 
 		struct sockaddr_in	get_struct_sockaddr(void) const;
 		int					get_server_socket(void) const;
-		void add_client(int server, int epoll_instance, int *num_sockets);
+		void 				add_client(int server, int epoll_instance, int *num_sockets);
+		User				*get_user_by_fd(int fd);
 
 	private:
 	

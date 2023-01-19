@@ -6,13 +6,13 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/18 06:08:08 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/19 17:24:12 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/User.hpp"
 
-User::User(sockaddr_in address, int fd) : address(address), fd(fd)
+User::User(int fd) : fd(fd)
 {
 }
 
@@ -30,6 +30,10 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
+int	User::getFd(void)
+{
+	return this->fd;
+}
 // e_event User::getEventHooked(void) {
 // 	return this->event_hooked;
 // }

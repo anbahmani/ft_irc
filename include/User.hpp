@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/18 06:22:17 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/01/19 17:24:38 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 class User
 {
 	private:
-		struct sockaddr_in	address;
+		//struct sockaddr_in	address;
 		int					fd;
 		std::string		username;
 		std::string		nickname;
@@ -28,7 +28,7 @@ class User
 	public:
 	
 		// Constructors
-		User(sockaddr_in address, int fd);
+		User(int fd);
 
 		// Destructor
 		~User();
