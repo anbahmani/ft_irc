@@ -12,10 +12,11 @@ class Command {
 
 	public :
 
+		std::map<std::string, int> cmds;
 		// Constructors
 
 		Command(void);
-		Command(std::string name, std::vector<std::string> parameters);
+		Command(std::string src);
 		
 		//Destructor
 
@@ -36,6 +37,6 @@ class Command {
 		void addParamter(std::string parameter);
 
 
-}
+};
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/18 06:22:24 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/03 19:21:05 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,8 @@
 # include <sys/epoll.h>
 # include "User.hpp"
 # include "Server.hpp"
+# include "Command.hpp"
 
-#include "Server.hpp"
 class Server;
 int	pass(char *buf, Server const &server, int client);
 

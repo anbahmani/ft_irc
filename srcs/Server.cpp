@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/19 19:01:32 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/03 22:30:37 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ User				*Server::get_user_by_fd(int fd)
 	return (NULL);
 }
 
-void Server::add_client(int server, int epoll_instance, int *num_sockets)
+void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_event event)
 {	
 	//nb de char lu
 	int				rc;
@@ -81,57 +81,27 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets)
 		}
 		buffer[rc] = 0;
 		data = buffer;
-		std::cout<<"=>>>>"<<data<<std::endl;
-		if (data.find("CAP LS") != std::string::npos) 
-		{
-			//std::cout << "client => server: " << data << std::endl;
-    		std::string response = "CAP * LS :multi-prefix\n";
-    		send(client, response.c_str(), response.length(), 0);
-    	}
-		if (data.find("CAP REQ") != std::string::npos) 
-		{
-			//std::cout << "client => server: " << data << std::endl;
-    		std::string response = "CAP * ACK multi-prefix\n";
-    		send(client, response.c_str(), response.length(), 0);
-    	}
-		if (data.find("PASS") != std::string::npos && !(data.find(_password) != std::string::npos))
-		{
-			//std::cout << "client => server: " << data << std::endl;
-    	    std::string response = "PASS rejected\n";
-    	    send(client, response.c_str(), response.length(), 0);
-			epoll_ctl(epoll_instance, EPOLL_CTL_DEL, client, &client_event);
+		Command cmd(data);
+		// std::cout<<cmd.getName()<<'\n';
+		// std::vector<std::string> param = cmd.getParameters();
+		// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+		// 	std::cout<<"param => "<<*iter<<'\n';
+		std::cout<<"<--------------------->"<<'\n'<<buffer<<"<--------------------->"<<'\n'<<'\n';
+		int x = execute_cmd(cmd, user, event, epoll_instance);
+		if(!x)
 			return ;
-		}
-		if (data.find("NICK") != std::string::npos)
-		{
-			//On check si le nickname est deja utilise
-			if (_users.find(buffer+5) != _users.end())
-			{
-				std::string response = "NickName already used.\n";
-    		    send(client, response.c_str(), response.length(), 0);
-				//Suppresion du socket de l'epoll
-				epoll_ctl(epoll_instance, EPOLL_CTL_DEL, client, &client_event);
-				close(client);
-				delete user;
-				return ;
-			}
-			else
-				user->setNickname(buffer+5);
-		}
-		if (data.find("USER") != std::string::npos)
-			user->setUsername(buffer + data.find(":"));
-		if (data.find("CAP END") != std::string::npos)
-			break ;
+		else if(x == 2)
+				break ;
 	}
 	//On prepare la reponse d'authentification
-	std::string response = ":localhost:"+_portNum+" 001 "+user->getNickname()+": Bienvenue sur Chat Irc\n";
+	std::string response = ":localhost:"+_portNum+' '+RPL_WELCOME+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
     
 	std::cout<<"rep = "<<response<<std::endl;
 	
 	send(client, response.c_str(), response.length(), 0);
 	response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\n";
 	send(client, response.c_str(), response.length(), 0);
-	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023\n";
+	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023.\n";
 	send(client, response.c_str(), response.length(), 0);
 	
 	//On ajoute le User a la map
@@ -188,40 +158,111 @@ void	Server::BuildServer()
 			//std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
 			if (events[i].data.fd == _server_socket) //si quelqu'un veut se connecter au serveur
 			{
-				add_client(_server_socket, rc, &num_socket);
+				add_client(_server_socket, rc, &num_socket, events[i]);
 				/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
 			}
 			else //si l'event concerne un client qu'on a deja ajouter a epoll
 			{
-				//std::cerr<<"else isisisisisii"<<std::endl;
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
-					
-				if(tmp > 0)
+				if (tmp <= 0)
+				{
+					std::cout << "Connection closed by client." << std::endl;
+					//Suppresion du socket de l'epoll
+					epoll_ctl(rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
+					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
+					close(events[i].data.fd);
+				}
+				else
 				{
 					buffer[tmp] = 0;
 					str = buffer;
+					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
+					Command cmd(str);
+					execute_cmd(cmd, get_user_by_fd(events[i].data.fd), events[i], rc);
 				}
-				else if (tmp <= 0 || str.find("QUIT :leaving") != std::string::npos)
-				{
-					std::cout << "Connection closed by client." << std::endl;
-					std::cout<<"je test"<<std::endl;
-					//Suppresion du socket de l'epoll
-					epoll_ctl(rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
-					close(events[i].data.fd);
-				}
-				else if (tmp <= 0 || str.find("PING") != std::string::npos)
-				{
-					std::string response = "PONG localhost:" + _portNum;
-					send(events[i].data.fd, response.c_str(), response.length(), 0);
-					std::cout<<response<<std::endl;
-				}
-				else if (str.find("PART localhost") != std::string::npos)
-				{
-					
-				}
-				std::cout<<"buffer => "<<buffer<<std::endl;
 			}
 		}
     }
 	(void) (num_socket);
+}
+
+int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc)
+{
+	std::string response;
+		std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
+				std::cout<<cmd.getName()<<'\n';
+		std::vector<std::string> param = cmd.getParameters();
+		for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+			std::cout<<"param => "<<*iter<<'\n';
+	switch (cmd.cmds.find(cmd.getName())->second)
+	{
+		case CAP:
+			if (!cmd.getParameters()[0].compare("LS"))
+			{
+				std::string response = "CAP * LS :multi-prefix\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				std::cout<<"response : "<<response<<std::endl;
+			}
+			if (!cmd.getParameters()[0].compare("REQ"))
+			{
+				std::string response = "CAP * ACK multi-prefix\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+								std::cout<<"response : "<<response<<std::endl;
+
+    		}
+			if (!cmd.getParameters()[0].compare("END"))
+			{
+				std::cout<<"resasdsadsa\n"<<std::endl;
+				return 2;
+			}
+			break;
+		case PASS:
+			if ((cmd.getParameters()[0].compare("1234")))
+			{
+				//std::cout << "client => server: " << data << std::endl;
+				std::string response = "PASS rejected\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				return 0;
+			}
+			break;
+		case NICK:
+			//On check si le nickname est deja utilise
+			if (_users.find(cmd.getParameters()[0]) != _users.end())
+			{
+				std::string response = "NickName already used.\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				//Suppresion du socket de l'epoll
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				close(user->getFd());
+				delete user;
+				return 0;
+			}
+			else
+				user->setNickname(cmd.getParameters()[0]);
+			break;
+		case PING:
+				response = "PONG localhost:"+_portNum;
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				std::cout<<"response : "<<response<<std::endl;
+			break;
+		case PART:
+			if (!cmd.getParameters()[0].compare("localhost")) //logout
+			{
+				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				_users.erase(user->getNickname());
+				close(event.data.fd);
+			}
+			break ;
+		case QUIT: //logout
+				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				_users.erase(user->getNickname());
+				close(event.data.fd);
+			break ;
+		default:
+			break;
+	}
+	return 1;
 }
