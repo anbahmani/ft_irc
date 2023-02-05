@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/03 22:30:37 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/05 18:43:21 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,17 +81,25 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 		}
 		buffer[rc] = 0;
 		data = buffer;
-		Command cmd(data);
-		// std::cout<<cmd.getName()<<'\n';
-		// std::vector<std::string> param = cmd.getParameters();
-		// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
-		// 	std::cout<<"param => "<<*iter<<'\n';
-		std::cout<<"<--------------------->"<<'\n'<<buffer<<"<--------------------->"<<'\n'<<'\n';
-		int x = execute_cmd(cmd, user, event, epoll_instance);
-		if(!x)
-			return ;
-		else if(x == 2)
+		size_t pos = 0;
+		int x = 0;
+		while ((pos = data.find('\n')) != std::string::npos)
+		{
+			Command cmd(data.substr(0, pos - 1));
+			// std::cout<<cmd.getName()<<'\n';
+			// std::vector<std::string> param = cmd.getParameters();
+			// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+			// 	std::cout<<"param => "<<*iter<<'\n';
+			std::cout<<"<--------------------->"<<'\n'<<buffer<<"<--------------------->"<<'\n'<<'\n';
+			x = execute_cmd(cmd, user, event, epoll_instance);
+			data.erase(0, pos + 1);
+			if(!x)
+				return ;
+			else if(x == 2)
 				break ;
+		}
+		if(x == 2)
+			break ;
 	}
 	//On prepare la reponse d'authentification
 	std::string response = ":localhost:"+_portNum+' '+RPL_WELCOME+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
@@ -193,31 +201,32 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::cout<<cmd.getName()<<'\n';
 		std::vector<std::string> param = cmd.getParameters();
 		for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
-			std::cout<<"param => "<<*iter<<'\n';
+			std::cout<<"param => "<<*iter<<"/*/";
+		std::cout<<std::endl;
 	switch (cmd.cmds.find(cmd.getName())->second)
 	{
 		case CAP:
-			if (!cmd.getParameters()[0].compare("LS"))
+			if (!(cmd.getParameters()[0].compare("LS")))
 			{
 				std::string response = "CAP * LS :multi-prefix\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			}
-			if (!cmd.getParameters()[0].compare("REQ"))
+			if (!(cmd.getParameters()[0].compare("REQ")))
 			{
 				std::string response = "CAP * ACK multi-prefix\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
-								std::cout<<"response : "<<response<<std::endl;
+				std::cout<<"response : "<<response<<std::endl;
 
     		}
-			if (!cmd.getParameters()[0].compare("END"))
+			if (!(cmd.getParameters()[0].compare("END")))
 			{
 				std::cout<<"resasdsadsa\n"<<std::endl;
 				return 2;
 			}
-			break;
+			break ;
 		case PASS:
-			if ((cmd.getParameters()[0].compare("1234")))
+			if ((cmd.getParameters()[0].compare(_password)))
 			{
 				//std::cout << "client => server: " << data << std::endl;
 				std::string response = "PASS rejected\n";
