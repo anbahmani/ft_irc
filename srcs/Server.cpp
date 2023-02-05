@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/05 18:43:21 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/05 18:57:28 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,6 +199,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 	std::string response;
 		std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
 				std::cout<<cmd.getName()<<'\n';
+				std::cout << "Paramters -------------------\n";
 		std::vector<std::string> param = cmd.getParameters();
 		for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
 			std::cout<<"param => "<<*iter<<"/*/";
@@ -226,14 +227,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			break ;
 		case PASS:
-			if ((cmd.getParameters()[0].compare(_password)))
-			{
-				//std::cout << "client => server: " << data << std::endl;
-				std::string response = "PASS rejected\n";
-				send(user->getFd(), response.c_str(), response.length(), 0);
-				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-				return 0;
-			}
+			// if ((cmd.getParameters()[0].compare("1234")))
+			// {
+			// 	//std::cout << "client => server: " << data << std::endl;
+			// 	std::string response = "PASS rejected\n";
+			// 	send(user->getFd(), response.c_str(), response.length(), 0);
+			// 	epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+			// 	return 0;
+			// }
 			break;
 		case NICK:
 			//On check si le nickname est deja utilise
@@ -270,6 +271,20 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				_users.erase(user->getNickname());
 				close(event.data.fd);
 			break ;
+		case JOIN: {//join channel and create the channel if it does not already exist
+			std::string channel = cmd.getParameters()[0];
+			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "/n";
+			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			if (it == channels.end()) { //channel not exist
+				std::vector<User *> myVector;
+				myVector.push_back(user);
+				channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
+			}
+			else { //the channel already exists
+				channels[channel].push_back(user);
+			}
+			break ;
+		}
 		default:
 			break;
 	}
