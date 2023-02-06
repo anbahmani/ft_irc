@@ -6,26 +6,11 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/06 18:47:25 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/05 18:43:21 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
-#include <sstream>
-# define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
-
-# define PRINT_LOG(x) std::cout << "[\033[1;36m" << __FUNCTION__ << "\033[0m] line : "\
-  << __LINE__ << " [" << x << "]" << std::endl;
-
-# define PRINT_ERR(x) std::cerr << "[\033[1;31m" << __FUNCTION__ << "\033[0m] line : "\
-  << __LINE__ << " [" << x << "]" << std::endl;
-
-# define PRINT_WIN(x) std::cout << "[\033[1;32m" << __FUNCTION__ << "\033[0m] line : "\
-  << __LINE__ << " [" << x << "]" << std::endl;
-
-# define PRINT_FUNC() std::cout << "[\033[36m" << __FUNCTION__ << "\033[0m] "\
-  << __FILENAME__ << std::endl;
 
 Server::Server(char *port, std::string pass) : _portNum(port), _password(pass)  {}
 
@@ -84,7 +69,6 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 	
 	char		buffer[1024];
 	std::string	data;
-	int i = 0;
 	if (client < 0)
 			std::cerr << "Error:\tConnection failed.";
 	while (true)
@@ -97,42 +81,35 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 		}
 		buffer[rc] = 0;
 		data = buffer;
-
 		size_t pos = 0;
 		int x = 0;
 		while ((pos = data.find('\n')) != std::string::npos)
 		{
 			Command cmd(data.substr(0, pos - 1));
-			std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
+			// std::cout<<cmd.getName()<<'\n';
+			// std::vector<std::string> param = cmd.getParameters();
+			// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+			// 	std::cout<<"param => "<<*iter<<'\n';
+			std::cout<<"<--------------------->"<<'\n'<<buffer<<"<--------------------->"<<'\n'<<'\n';
 			x = execute_cmd(cmd, user, event, epoll_instance);
 			data.erase(0, pos + 1);
-			if (cmd.getName().compare("PASS") == 0)
-				i = 1;
 			if(!x)
-				return (delete user);
+				return ;
 			else if(x == 2)
 				break ;
 		}
 		if(x == 2)
 			break ;
 	}
-	if (!i)
-	{
-		std::string response = "NO PASSWORD\n";
-		send(client, response.c_str(), response.length(), 0);
-		epoll_ctl(rc, EPOLL_CTL_DEL, client, &event);
-		delete user;
-		return ;
-	}
 	//On prepare la reponse d'authentification
-	std::string response = ":myserv:"+_portNum+' '+RPL_WELCOME+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
+	std::string response = ":localhost:"+_portNum+' '+RPL_WELCOME+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
     
 	std::cout<<"rep = "<<response<<std::endl;
 	
 	send(client, response.c_str(), response.length(), 0);
-	response = ":myserv:"+_portNum+" 002 : Your host is myserv, running version 1.\n";
+	response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\n";
 	send(client, response.c_str(), response.length(), 0);
-	response = ":myserv:"+_portNum+" 003 : This server was created 01/01/2023.\n";
+	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023.\n";
 	send(client, response.c_str(), response.length(), 0);
 	
 	//On ajoute le User a la map
@@ -192,8 +169,7 @@ void	Server::BuildServer()
 				add_client(_server_socket, rc, &num_socket, events[i]);
 				/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
 			}
-			else if (events[i].events & EPOLLIN)
-			//else //si l'event concerne un client qu'on a deja ajouter a epoll
+			else //si l'event concerne un client qu'on a deja ajouter a epoll
 			{
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (tmp <= 0)
@@ -221,12 +197,12 @@ void	Server::BuildServer()
 int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc)
 {
 	std::string response;
-	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
-	// 		std::cout<<cmd.getName()<<'\n';
-	// std::vector<std::string> param = cmd.getParameters();
-	// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
-	// 	std::cout<<"param => "<<*iter<<"\n";
-	// std::cout<<std::endl;
+		std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
+				std::cout<<cmd.getName()<<'\n';
+		std::vector<std::string> param = cmd.getParameters();
+		for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+			std::cout<<"param => "<<*iter<<"/*/";
+		std::cout<<std::endl;
 	switch (cmd.cmds.find(cmd.getName())->second)
 	{
 		case CAP:
@@ -250,7 +226,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			break ;
 		case PASS:
-			if ((cmd.getParameters()[0].compare(_password)) != 0)
+			if ((cmd.getParameters()[0].compare(_password)))
 			{
 				//std::cout << "client => server: " << data << std::endl;
 				std::string response = "PASS rejected\n";
@@ -259,16 +235,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				return 0;
 			}
 			break;
-		// case USER:
-		// 	if ((cmd.getParameters()[0].compare(_password)))
-		// 	{
-		// 		//std::cout << "client => server: " << data << std::endl;
-		// 		std::string response = "PASS rejected\n";
-		// 		send(user->getFd(), response.c_str(), response.length(), 0);
-		// 		epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-		// 		return 0;
-		// 	}
-		// 	break;
 		case NICK:
 			//On check si le nickname est deja utilise
 			if (_users.find(cmd.getParameters()[0]) != _users.end())
@@ -285,18 +251,12 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				user->setNickname(cmd.getParameters()[0]);
 			break;
 		case PING:
-				response = "PONG myserv:"+_portNum;
-				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
-			break;
-		case WHOIS:
-			std::cout<<"test\n";
-				response = ":myserv 311 "+user->getNickname()+" myserv *:"+user->getUsername();
+				response = "PONG localhost:"+_portNum;
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PART:
-			if (!cmd.getParameters()[0].compare("myserv")) //logout
+			if (!cmd.getParameters()[0].compare("localhost")) //logout
 			{
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
