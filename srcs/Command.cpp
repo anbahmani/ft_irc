@@ -34,6 +34,9 @@
 		cmds.insert(std::pair<std::string, int>("JOIN", JOIN));
 		cmds.insert(std::pair<std::string, int>("USER", USER));
 		cmds.insert(std::pair<std::string, int>("MODE", MODE));
+		cmds.insert(std::pair<std::string, int>("PRIVMSG", PRIVMSG));
+		cmds.insert(std::pair<std::string, int>("WHOIS", WHOIS));
+
 
 		return ;
 	}

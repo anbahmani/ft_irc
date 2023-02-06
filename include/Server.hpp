@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/03 22:18:28 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/06 13:05:34 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,12 @@ class Server
 // Commands
 
  /*
-int		cap();
-int		pass();
-int		nick();
-int		user();
-int		oper();
+int		cap(); ait
+int		pass(); ait
+int		nick(); ait
+
+	int		user();
+	int		oper();
 int		mode();
 int     quit();
 int		msg();
@@ -84,6 +85,7 @@ int		whois();
 #define		JOIN	9
 #define		MODE	10
 #define		WHOIS	11
+#define		PRIVMSG	12
 
 
 #define		RPL_WELCOME					"001"
