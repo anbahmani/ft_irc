@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/19 17:24:12 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/06 19:35:11 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/User.hpp"
 
-User::User(int fd) : fd(fd)
+User::User(int fd) : fd(fd), _op(false)
 {
 }
 
@@ -34,6 +34,11 @@ int	User::getFd(void)
 {
 	return this->fd;
 }
+
+bool User::getIRCOp(void)
+{
+	return this->_op;
+}
 // e_event User::getEventHooked(void) {
 // 	return this->event_hooked;
 // }
@@ -47,6 +52,12 @@ void User::setUsername(std::string username){
 
 void User::setNickname(std::string nickname){
 	this->nickname = nickname;
+	return ;
+}
+
+void User::setIRCOp(bool state)
+{
+	this->_op = state;
 	return ;
 }
 

@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/07 12:27:06 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/07 18:27:07 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,15 @@
 # include <map>
 # include <poll.h>
 # include <sys/epoll.h>
+# include <sstream>
 # include "User.hpp"
 # include "Server.hpp"
 # include "Command.hpp"
 
 class Server;
-int	pass(char *buf, Server const &server, int client);
+
+void	reply(int rplcode, int rplerror, User *user, Server &server);
+void	display(std::string to_display, User *user);
 
 enum e_event { 
 	CAP_HOOKED,

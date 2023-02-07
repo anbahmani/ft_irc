@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/06 13:05:34 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/07 18:21:37 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-# define SERVER_HPP
-# define MAX_USERS 10
+# define 	SERVER_HPP
+
+# define 	MAX_USERS		10
+# define 	IRCOpwd			"admin\r\n"
 
 # include "irc.hpp"
 # include "User.hpp"
@@ -32,9 +34,11 @@ class Server
 
 		struct sockaddr_in	get_struct_sockaddr(void) const;
 		int					get_server_socket(void) const;
+		std::string			getNameServer(void) const;
+		std::string			getPortNum(void) const;
 		void 				add_client(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
-		int				execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
+		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
 
 	private:
 	
@@ -45,17 +49,18 @@ class Server
 		int					_server_socket;
 		std::string			_portNum;
 		std::string			_password;
+		const std::string 	_name;
 };
 
 // Commands
 
  /*
-int		cap(); ait
-int		pass(); ait
-int		nick(); ait
+int		cap();
+int		pass();
+int		nick();
 
-	int		user();
-	int		oper();
+int		user();
+int		oper();
 int		mode();
 int     quit();
 int		msg();
@@ -83,59 +88,59 @@ int		whois();
 #define		QUIT	7
 #define		PART	8
 #define		JOIN	9
-#define		MODE	10
+#define		OPER	10
 #define		WHOIS	11
-#define		PRIVMSG	12
+#define		MODE	12
 
 
-#define		RPL_WELCOME					"001"
-#define		RPL_YOURHOST				"002"
-#define		RPL_CREATED					"003"
-#define		RPL_MYINFO					"004"
-#define     RPL_ISUPPORT                "005"
-#define     RPL_UMODEIS                 "221"
-#define     RPL_WHOISUSER               "311"
-#define     RPL_ENDOFWHO                "315"
-#define     RPL_ENDOFWHOIS              "318"
-#define     RPL_LISTSTART               "321"
-#define     RPL_LIST                    "322"
-#define     RPL_LISTEND                 "323"
-#define     RPL_CHANNELMODEIS           "324"
-#define     RPL_NOTOPIC                 "331"
-#define     RPL_TOPIC                   "332"
-#define     RPL_TOPICWHOTIME            "333"
-#define     RPL_INVITING                "341"
-#define     RPL_WHOREPLY                "352"
-#define     RPL_NAMREPLY                "353"
-#define     RPL_ENDOFNAMES              "366"
-#define     RPL_BANLIST                 "367"
-#define     RPL_ENDOFBANLIST            "368"
-#define     RPL_YOUREOPER               "381"
+#define		RPL_WELCOME					001
+#define		RPL_YOURHOST				002
+#define		RPL_CREATED					003
+#define		RPL_MYINFO					004
+#define     RPL_ISUPPORT                005
+#define     RPL_UMODEIS                 221
+#define     RPL_WHOISUSER               311
+#define     RPL_ENDOFWHO                315
+#define     RPL_ENDOFWHOIS              318
+#define     RPL_LISTSTART               321
+#define     RPL_LIST                    322
+#define     RPL_LISTEND                 323
+#define     RPL_CHANNELMODEIS           324
+#define     RPL_NOTOPIC                 331
+#define     RPL_TOPIC                   332
+#define     RPL_TOPICWHOTIME            333
+#define     RPL_INVITING                341
+#define     RPL_WHOREPLY                352
+#define     RPL_NAMREPLY                353
+#define     RPL_ENDOFNAMES              366
+#define     RPL_BANLIST                 367
+#define     RPL_ENDOFBANLIST            368
+#define     RPL_YOUREOPER               381
 
-#define     ERR_NOSUCHNICK              "401"
-#define     ERR_NOSUCHCHANNEL           "403"
-#define     ERR_CANNOTSENDTOCHAN        "404"
-#define     ERR_TOOMANYCHANNELS         "405"
-#define     ERR_TOOMANYTARGETS          "407"
-#define     ERR_NORECIPIENT             "411"
-#define     ERR_NOTEXTTOSEND            "412"
-#define     ERR_UNKNOWNCOMMAND          "421"
-#define     ERR_NONICKNAMEGIVEN         "431"
-#define     ERR_ERRONEUSNICKNAME        "432"
-#define     ERR_NICKNAMEINUSE           "433"
-#define     ERR_USERNOTINCHANNEL        "441"
-#define     ERR_NOTONCHANNEL            "442"
-#define     ERR_USERONCHANNEL           "443"
-#define     ERR_NEEDMOREPARAMS          "461"
-#define     ERR_ALREADYREGISTERED       "462"
-#define     ERR_PASSWDMISMATCH          "464"
-#define     ERR_CHANNELISFULL           "471"
-#define     ERR_INVITEONLYCHAN          "473"
-#define     ERR_BANNEDFROMCHAN          "474"
-#define     ERR_BADCHANNELKEY           "475"
-#define     ERR_NOPRIVILEGES            "481"
-#define     ERR_CHANOPRIVISNEEDED       "482"
-#define     ERR_UMODEUNKNOWNFLAG        "501"
-#define     ERR_USERSDONTMATCH          "502"
+#define     ERR_NOSUCHNICK              401
+#define     ERR_NOSUCHCHANNEL           403
+#define     ERR_CANNOTSENDTOCHAN        404
+#define     ERR_TOOMANYCHANNELS         405
+#define     ERR_TOOMANYTARGETS          407
+#define     ERR_NORECIPIENT             411
+#define     ERR_NOTEXTTOSEND            412
+#define     ERR_UNKNOWNCOMMAND          421
+#define     ERR_NONICKNAMEGIVEN         431
+#define     ERR_ERRONEUSNICKNAME        432
+#define     ERR_NICKNAMEINUSE           433
+#define     ERR_USERNOTINCHANNEL        441
+#define     ERR_NOTONCHANNEL            442
+#define     ERR_USERONCHANNEL           443
+#define     ERR_NEEDMOREPARAMS          461
+#define     ERR_ALREADYREGISTERED       462
+#define     ERR_PASSWDMISMATCH          464
+#define     ERR_CHANNELISFULL           471
+#define     ERR_INVITEONLYCHAN          473
+#define     ERR_BANNEDFROMCHAN          474
+#define     ERR_BADCHANNELKEY           475
+#define     ERR_NOPRIVILEGES            481
+#define     ERR_CHANOPRIVISNEEDED       482
+#define     ERR_UMODEUNKNOWNFLAG        501
+#define     ERR_USERSDONTMATCH          502
 
 #endif
