@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/06 19:35:11 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/07 18:56:28 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,10 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
+std::string User::getFullname(void){
+	return this->fullname;
+}
+
 int	User::getFd(void)
 {
 	return this->fd;
@@ -47,6 +51,11 @@ bool User::getIRCOp(void)
 
 void User::setUsername(std::string username){
 	this->username = username;
+	return ;
+}
+
+void User::setFullname(std::string fullname){
+	this->fullname = fullname;
 	return ;
 }
 

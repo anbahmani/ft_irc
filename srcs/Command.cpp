@@ -55,10 +55,32 @@
 	std::vector<std::string> Command::getParameters(void){
 		return this->_parameters;
 	}
-				// 
+
 	int	Command::getNbParameters(void)
 	{
 		return this->_parameters.size();
+	}
+
+	std::string Command::getMsg(void){
+		std::string r("");
+		for (std::vector<std::string>::iterator it = this->_parameters.begin() + 1; it < this->_parameters.end(); it++)
+		{
+			r.append(*it);
+			if (it < this->_parameters.end() - 1)
+				r.append(" ");
+		}
+		return r;
+	}
+
+	std::string Command::getFName(void){
+		std::string r("");
+		for (std::vector<std::string>::iterator it = this->_parameters.begin() + 3; it < this->_parameters.end(); it++)
+		{
+			r.append(*it);
+			if (it < this->_parameters.end() - 1)
+				r.append(" ");
+		}
+		return r;
 	}
 	// // Setters
 

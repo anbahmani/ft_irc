@@ -26,6 +26,8 @@ class Command {
 
 		std::string getName(void);
 		std::vector<std::string> getParameters(void);
+		std::string getMsg(void);
+		std::string getFName(void);
 		int	getNbParameters(void);
 
 		// Setters

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/07 18:27:15 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/07 19:02:00 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,14 +135,16 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 		return ;
 	}
 	//On prepare la reponse d'authentification
-	std::string response = ":localhost:"+_portNum+' '+"001"+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
+	std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\n";
     
 	std::cout<<"rep = "<<response<<std::endl;
 	
 	send(client, response.c_str(), response.length(), 0);
-	response = ":myserv:"+_portNum+" 002 : Your host is myserv, running version 1.\n";
+	response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\r\n";
 	send(client, response.c_str(), response.length(), 0);
-	response = ":myserv:"+_portNum+" 003 : This server was created 01/01/2023.\n";
+	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023.\r\n";
+	send(client, response.c_str(), response.length(), 0);
+	response = ":localhost:"+_portNum+" 004 "+user->getNickname()+"\r\n";
 	send(client, response.c_str(), response.length(), 0);
 	
 	//On ajoute le User a la map
@@ -190,7 +192,7 @@ void	Server::BuildServer()
 	int num_event;
 	struct epoll_event events[100];
 	std::string	str;
-
+	size_t pos;
 	while (1)
 	{
 		num_event = epoll_wait(rc, events, num_socket, -1);
@@ -218,9 +220,13 @@ void	Server::BuildServer()
 				{
 					buffer[tmp] = 0;
 					str = buffer;
-					std::cout<<"<++++++++++++++++++++>"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
-					Command cmd(str);
-					execute_cmd(cmd, get_user_by_fd(events[i].data.fd), events[i], rc);
+					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
+					while ((pos = str.find('\n')) != std::string::npos)
+					{
+						Command cmd(str.substr(0, pos - 1));
+						execute_cmd(cmd, get_user_by_fd(events[i].data.fd), events[i], rc);
+						str.erase(0, pos + 1);
+					}
 				}
 			}
 		}
@@ -242,13 +248,13 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case CAP:
 			if (!(cmd.getParameters()[0].compare("LS")))
 			{
-				std::string response = "CAP * LS :multi-prefix\n";
+				std::string response = "CAP * LS :multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			}
 			if (!(cmd.getParameters()[0].compare("REQ")))
 			{
-				std::string response = "CAP * ACK multi-prefix\n";
+				std::string response = "CAP * ACK multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 
@@ -262,28 +268,22 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PASS:
 			if ((cmd.getParameters()[0].compare(_password)))
 			{
-				// std::cout << "client => server: " << data << std::endl;
-				std::string response = "PASS rejected\n";
+				//std::cout << "client => server: " << data << std::endl;
+				std::string response = "PASS rejected\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
 				return 0;
 			}
 			break;
-		// case USER:
-		// 	if ((cmd.getParameters()[0].compare(_password)))
-		// 	{
-		// 		//std::cout << "client => server: " << data << std::endl;
-		// 		std::string response = "PASS rejected\n";
-		// 		send(user->getFd(), response.c_str(), response.length(), 0);
-		// 		epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-		// 		return 0;
-		// 	}
-		// 	break;
+		case USER:
+			user->setUsername(cmd.getParameters()[0]);
+			user->setFullname(cmd.getFName());
+			break;
 		case NICK:
 			//On check si le nickname est deja utilise
 			if (_users.find(cmd.getParameters()[0]) != _users.end())
 			{
-				std::string response = "NickName already used.\n";
+				std::string response = "NickName already used.\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				//Suppresion du socket de l'epoll
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -294,19 +294,56 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			else
 				user->setNickname(cmd.getParameters()[0]);
 			break;
+		case PRIVMSG:
+				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
+				{
+					// if (_users.find(cmd.getParameters()[0]) != _users.end())
+					// {
+						// response = ":"+user->getNickname()+" PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
+						// std::cout<<"response : "<<response<<std::endl;
+						
+						response = ":"+user->getNickname()+" localhost PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
+						// send(user->getFd(), response.c_str(), response.length(), 0);
+						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
+						std::cout<<"response : "<<response<<std::endl;
+					// }
+					// else
+					// {
+					// 	response = ":localhost 401 "+user->getNickname()+" :No such Nickname";
+					// 	send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
+					// 	std::cout<<"response : "<<response<<std::endl;
+					// }
+				}
+				else if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] != '#') //msg to user
+				{
+					if (_users.find(cmd.getParameters()[0]) != _users.end())
+					{
+						response = ":"+user->getNickname()+" PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
+						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
+					//	write(user->getFd(), response.c_str(), response.length());
+						std::cout<<"response =>"<<response<<std::endl;
+					}
+					else
+					{
+						response = ":localhost 401 "+user->getNickname()+" :No such Nickname\r\n";
+						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
+						std::cout<<"response =>"<<response<<std::endl;
+					}
+				}
+			break;
 		case PING:
-				response = "PONG myserv:"+_portNum;
+				response = "PONG localhost:"+_portNum+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case WHOIS:
-			std::cout<<"test\n";
-				response = ":myserv 311 "+user->getNickname()+" myserv *:"+user->getUsername();
+				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getUsername()+" localhost * "+user->getFullname()+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
-		case PART:{
-			if (!cmd.getParameters()[0].compare("myserv")) //logout
+		case PART:
+		{
+			if (!cmd.getParameters()[0].compare("localhost")) //logout
 			{
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -335,7 +372,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case JOIN: 
 		{//join channel and create the channel if it does not already exist
 			std::string channel = cmd.getParameters()[0];
-			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "/n";
+			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
 			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
 			if (it == channels.end()) 
 			{ //channel not exist

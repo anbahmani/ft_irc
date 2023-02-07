@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/06 19:36:12 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/07 18:57:36 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,10 @@ class User
 		std::string		username;
 		std::string		nickname;
 		bool			_op;
-		//e_event			event_hooked;
 
+		std::string		fullname;
+		//e_event			event_hooked;
 	public:
-	
 		// Constructors
 		User(int fd);
 
@@ -39,13 +39,14 @@ class User
 		std::string getUsername(void);
 		std::string getNickname(void);
 		bool getIRCOp(void);
+
+		std::string getFullname(void);
 		//e_event 	getEventHooked(void);
 
-		// Setters
 		void setUsername(std::string);
-		void setNickname(std::string);
+		void setFullname(std::string);
 		void setIRCOp(bool state);
-
+		void setNickname(std::string nickname);
 		// Specific methods
 		// void incrEventHooked(void);
 };
