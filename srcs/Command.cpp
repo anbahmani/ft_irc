@@ -55,8 +55,6 @@
 	std::vector<std::string> Command::getParameters(void){
 		return this->_parameters;
 	}
-ers()[0].compare(_password)))
-			{
 				// 
 	int	Command::getNbParameters(void)
 	{
