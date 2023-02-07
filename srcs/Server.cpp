@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/05 18:57:28 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/07 18:07:07 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 
-Server::Server(char *port, std::string pass) : _portNum(port), _password(pass)  {}
+Server::Server(char *port, std::string pass) : _portNum(port), _password(pass), _name("42IRC")  {}
 
 Server::~Server() {}
 
@@ -24,6 +24,16 @@ struct sockaddr_in	Server::get_struct_sockaddr(void) const
 int	Server::get_server_socket(void) const
 {
 	return (_server_socket);
+}
+
+std::string	Server::getNameServer(void) const
+{
+	return (this->_name);
+}
+
+std::string	Server::getPortNum(void) const
+{
+	return (this->_portNum);
 }
 
 User				*Server::get_user_by_fd(int fd)
@@ -102,7 +112,7 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 			break ;
 	}
 	//On prepare la reponse d'authentification
-	std::string response = ":localhost:"+_portNum+' '+RPL_WELCOME+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
+	std::string response = ":localhost:"+_portNum+' '+"001"+' '+(user->getNickname())+": Bienvenue sur Chat Irc\n";
     
 	std::cout<<"rep = "<<response<<std::endl;
 	
@@ -184,7 +194,7 @@ void	Server::BuildServer()
 				{
 					buffer[tmp] = 0;
 					str = buffer;
-					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
+					std::cout<<"<++++++++++++++++++++>"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
 					Command cmd(str);
 					execute_cmd(cmd, get_user_by_fd(events[i].data.fd), events[i], rc);
 				}
@@ -227,14 +237,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			break ;
 		case PASS:
-			// if ((cmd.getParameters()[0].compare("1234")))
-			// {
-			// 	//std::cout << "client => server: " << data << std::endl;
-			// 	std::string response = "PASS rejected\n";
-			// 	send(user->getFd(), response.c_str(), response.length(), 0);
-			// 	epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-			// 	return 0;
-			// }
+			if ((cmd.getParameters()[0].compare(_password)))
+			{
+				// std::cout << "client => server: " << data << std::endl;
+				std::string response = "PASS rejected\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				return 0;
+			}
 			break;
 		case NICK:
 			//On check si le nickname est deja utilise
@@ -271,22 +281,39 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				_users.erase(user->getNickname());
 				close(event.data.fd);
 			break ;
-		case JOIN: {//join channel and create the channel if it does not already exist
+		case JOIN: 
+		{//join channel and create the channel if it does not already exist
 			std::string channel = cmd.getParameters()[0];
 			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "/n";
 			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
-			if (it == channels.end()) { //channel not exist
+			if (it == channels.end()) 
+			{ //channel not exist
 				std::vector<User *> myVector;
 				myVector.push_back(user);
 				channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
 			}
-			else { //the channel already exists
+			else 
+			{ //the channel already exists
 				channels[channel].push_back(user);
 			}
 			break ;
 		}
-		default:
-			break;
+		case OPER:  // become admin
+			std::string pwd = cmd.getParameters()[1];
+			
+			if (cmd.getNbParameters() < 1)
+				std::cout << ERR_NEEDMOREPARAMS << std::endl;
+			if (pwd.compare(IRCOpwd) == 0)
+			{
+				user->setIRCOp(true);
+				display("MODE " + user->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, user, (*this));
+				
+			}
+			if (pwd.compare(IRCOpwd) != 0)
+				reply(-1, ERR_PASSWDMISMATCH, user, (*this));
+				
+			break ;
 	}
 	return 1;
 }

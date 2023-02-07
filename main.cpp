@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:48:15 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/01/17 20:34:05 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/06 18:33:43 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,3 +31,15 @@ int main(int ac, char **av)
 } 
 
 //RMRECONNS
+
+/*
+
+Probleme: 
+
+	- On ne peut pas se connecter avec un mot de passe faux, mais on peut sans mdp.
+	- La commande PART ne fonctionne pas
+	- connexion avec plus de 10 utilisateurs
+	- command op
+	- command notice
+
+*/

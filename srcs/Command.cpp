@@ -33,7 +33,9 @@
 		cmds.insert(std::pair<std::string, int>("PART", PART));
 		cmds.insert(std::pair<std::string, int>("JOIN", JOIN));
 		cmds.insert(std::pair<std::string, int>("USER", USER));
+		cmds.insert(std::pair<std::string, int>("WHOIS", WHOIS));
 		cmds.insert(std::pair<std::string, int>("MODE", MODE));
+		cmds.insert(std::pair<std::string, int>("OPER", OPER));
 
 		return ;
 	}
@@ -54,6 +56,10 @@
 		return this->_parameters;
 	}
 
+	int	Command::getNbParameters(void)
+	{
+		return this->_parameters.size();
+	}
 	// // Setters
 
 	// void Command::setName(std::string name){
