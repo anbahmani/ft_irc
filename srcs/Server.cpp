@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/06 18:52:22 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:54:11 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,7 +295,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
-		case PART:
+		case PART:{
 			if (!cmd.getParameters()[0].compare("myserv")) //logout
 			{
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
@@ -303,7 +303,19 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				_users.erase(user->getNickname());
 				close(event.data.fd);
 			}
+			std::string channel = cmd.getParameters()[0];
+			std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "/n";
+			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			if (it != channels.end()) { //channel exists
+				std::vector<User *>::iterator it_vector_user = std::find(channels[channel].begin(), channels[channel].end(), user);
+				channels[channel].erase(it_vector_user);
+				response = ":myserv PART #" + channel;
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				for (it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send this part response to all the user in the channel
+					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
+			}
 			break ;
+		}
 		case QUIT: //logout
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -322,6 +334,10 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			else { //the channel already exists
 				channels[channel].push_back(user);
 			}
+			response = ":myserv JOIN #" + channel;
+			//send(user->getFd(), response.c_str(), response.length(), 0);
+			for (std::vector<User *>::iterator it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send the join response to all the user in the channel
+				send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
 			break ;
 		}
 		default:

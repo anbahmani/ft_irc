@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/03 19:21:05 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:27:06 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <vector>
+# include <algorithm>
 # include <map>
 # include <poll.h>
 # include <sys/epoll.h>
