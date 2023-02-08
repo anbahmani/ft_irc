@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/07 18:59:25 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/08 15:48:39 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class Server
 		// void new_users();
 
 		struct sockaddr_in	get_struct_sockaddr(void) const;
+		void				sendToChan(Command cmd, User *user);
 		int					get_server_socket(void) const;
 		std::string			getNameServer(void) const;
 		std::string			getPortNum(void) const;

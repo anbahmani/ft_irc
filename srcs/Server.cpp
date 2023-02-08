@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/07 19:02:00 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/08 17:07:24 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,32 +99,35 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 			std::cerr << "Error:\tConnection failed.";
 	while (true)
 	{
-		rc = recv(client, buffer, sizeof(buffer), 0);
-		if (rc <= 0)
+		if (client_event.events == EPOLLIN)
 		{
-			std::cout << "Connection closed by client." << std::endl;
-			return ;
-		}
-		buffer[rc] = 0;
-		data = buffer;
+			rc = recv(client, buffer, sizeof(buffer), 0);
+			if (rc <= 0)
+			{
+				std::cout << "Connection closed by client." << std::endl;
+				return ;
+			}
+			buffer[rc] = 0;
+			data = buffer;
 
-		size_t pos = 0;
-		int x = 0;
-		while ((pos = data.find('\n')) != std::string::npos)
-		{
-			Command cmd(data.substr(0, pos - 1));
-			std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
-			x = execute_cmd(cmd, user, event, epoll_instance);
-			data.erase(0, pos + 1);
-			if (cmd.getName().compare("PASS") == 0)
-				i = 1;
-			if(!x)
-				return (delete user);
-			else if(x == 2)
+			size_t pos = 0;
+			int x = 0;
+			while ((pos = data.find('\n')) != std::string::npos)
+			{
+				Command cmd(data.substr(0, pos - 1));
+				std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
+				x = execute_cmd(cmd, user, event, epoll_instance);
+				data.erase(0, pos + 1);
+				if (cmd.getName().compare("PASS") == 0)
+					i = 1;
+				if(!x)
+					return (delete user);
+				else if(x == 2)
+					break ;
+			}
+			if(x == 2)
 				break ;
 		}
-		if(x == 2)
-			break ;
 	}
 	if (!i)
 	{
@@ -199,12 +202,12 @@ void	Server::BuildServer()
 		for (int i = 0; i < num_event; i++)
 		{
 			//std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
-			if (events[i].data.fd == _server_socket) //si quelqu'un veut se connecter au serveur
+			if (events[i].data.fd == _server_socket && events[i].events == EPOLLIN) //si quelqu'un veut se connecter au serveur
 			{
 				add_client(_server_socket, rc, &num_socket, events[i]);
 				/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
 			}
-			else if (events[i].events & EPOLLIN)
+			else if (events[i].events == EPOLLIN)
 			//else //si l'event concerne un client qu'on a deja ajouter a epoll
 			{
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
@@ -297,30 +300,15 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PRIVMSG:
 				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
 				{
-					// if (_users.find(cmd.getParameters()[0]) != _users.end())
-					// {
-						// response = ":"+user->getNickname()+" PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
-						// std::cout<<"response : "<<response<<std::endl;
-						
-						response = ":"+user->getNickname()+" localhost PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
-						// send(user->getFd(), response.c_str(), response.length(), 0);
-						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
-						std::cout<<"response : "<<response<<std::endl;
-					// }
-					// else
-					// {
-					// 	response = ":localhost 401 "+user->getNickname()+" :No such Nickname";
-					// 	send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
-					// 	std::cout<<"response : "<<response<<std::endl;
-					// }
+					sendToChan(cmd, user);
 				}
 				else if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] != '#') //msg to user
 				{
 					if (_users.find(cmd.getParameters()[0]) != _users.end())
 					{
-						response = ":"+user->getNickname()+" PRIVMSG "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
-						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
-					//	write(user->getFd(), response.c_str(), response.length());
+						response = ":"+user->getNickname()+" "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
+						display(response, (_users.find(cmd.getParameters()[0])->second));
+						display(response, user);
 						std::cout<<"response =>"<<response<<std::endl;
 					}
 					else
@@ -371,7 +359,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break ;
 		case JOIN: 
 		{//join channel and create the channel if it does not already exist
-			std::string channel = cmd.getParameters()[0];
+			std::string channel = cmd.getParameters()[0].c_str() + 1;
 			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
 			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
 			if (it == channels.end()) 
@@ -408,4 +396,29 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break ;
 	}
 	return 1;
+}
+
+void Server::sendToChan(Command cmd, User *user)
+{
+	if (channels.find(cmd.getParameters()[0].c_str() + 1) != channels.end())
+	{
+		std::string response;
+		std::string chan = cmd.getParameters()[0].c_str() + 1;
+		std::map<std::string, std::vector<User *> >::iterator it = channels.find(chan);
+		//check if the chan exist and if the user is on it
+		if (it != channels.end() && std::find((*it).second.begin(), (*it).second.end(), user) != (*it).second.end())
+		{
+			for (std::vector<User *>::iterator it_vector_user = channels[chan].begin(); it_vector_user < channels[chan].end(); it_vector_user++)
+			{
+				if ((*it_vector_user)->getFd() != user->getFd())
+				{
+					response = ":"+user->getNickname()+" PRIVMSG #"+chan+' '+cmd.getMsg()+"\r\n";
+					std::cout<<"response : "<<response<<std::endl;
+					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
+				}
+			}
+		}
+		return ;
+	}
+	reply(-1, ERR_CANNOTSENDTOCHAN, user, (*this));
 }
