@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/08 17:51:30 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/09 16:31:53 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,14 @@
 
 class Server;
 
-void	reply(int rplcode, int rplerror, User *user, Server &server);
+// replies.cpp
+void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server);
 void	display(std::string to_display, User *user);
+
+// utils.cpp
+int		check_mode(std::string mode);
+int		check_if_mode(User *user, std::string mode);
+int		check_if_not_mode(User *user, std::string mode);
 
 enum e_event { 
 	CAP_HOOKED,

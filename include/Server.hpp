@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/08 15:48:39 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/09 16:47:33 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define 	SERVER_HPP
 
 # define 	MAX_USERS		10
-# define 	IRCOpwd			"admin\r\n"
+# define 	IRCOpwd			"admin"
 
 # include "irc.hpp"
 # include "User.hpp"
