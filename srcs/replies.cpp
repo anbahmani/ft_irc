@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/08 17:05:07 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/09 02:07:51 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,10 @@ void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode 
 	{
 		case ERR_PASSWDMISMATCH:
 			err = ": Password incorect";
+			break ;
 		case ERR_CANNOTSENDTOCHAN:
 			err = ": You have to join this channel to send an msg to it.";
+			break ;
 		default:
 			break;
 	}
