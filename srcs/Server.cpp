@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/08 17:07:24 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/09 18:53:40 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -330,7 +330,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PART:
-		{
 			if (!cmd.getParameters()[0].compare("localhost")) //logout
 			{
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
@@ -338,19 +337,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				_users.erase(user->getNickname());
 				close(event.data.fd);
 			}
-			std::string channel = cmd.getParameters()[0];
-			std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "/n";
-			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
-			if (it != channels.end()) { //channel exists
-				std::vector<User *>::iterator it_vector_user = std::find(channels[channel].begin(), channels[channel].end(), user);
-				channels[channel].erase(it_vector_user);
-				response = ":myserv PART #" + channel;
-				send(user->getFd(), response.c_str(), response.length(), 0);
-				for (it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send this part response to all the user in the channel
-					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
-			}
 			break ;
-		}
 		case QUIT: //logout
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -358,26 +345,8 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				close(event.data.fd);
 			break ;
 		case JOIN: 
-		{//join channel and create the channel if it does not already exist
-			std::string channel = cmd.getParameters()[0].c_str() + 1;
-			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
-			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
-			if (it == channels.end()) 
-			{ //channel not exist
-				std::vector<User *> myVector;
-				myVector.push_back(user);
-				channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
-			}
-			else 
-			{ //the channel already exists
-				channels[channel].push_back(user);
-			}
-			response = ":myserv JOIN #" + channel;
-			//send(user->getFd(), response.c_str(), response.length(), 0);
-			for (std::vector<User *>::iterator it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send the join response to all the user in the channel
-				send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
+			this->join(cmd, user, response);
 			break ;
-		}
 		case OPER:  // become admin
 			std::string pwd = cmd.getParameters()[1];
 			
@@ -398,27 +367,45 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 	return 1;
 }
 
-void Server::sendToChan(Command cmd, User *user)
-{
-	if (channels.find(cmd.getParameters()[0].c_str() + 1) != channels.end())
-	{
-		std::string response;
-		std::string chan = cmd.getParameters()[0].c_str() + 1;
-		std::map<std::string, std::vector<User *> >::iterator it = channels.find(chan);
-		//check if the chan exist and if the user is on it
-		if (it != channels.end() && std::find((*it).second.begin(), (*it).second.end(), user) != (*it).second.end())
-		{
-			for (std::vector<User *>::iterator it_vector_user = channels[chan].begin(); it_vector_user < channels[chan].end(); it_vector_user++)
-			{
-				if ((*it_vector_user)->getFd() != user->getFd())
-				{
-					response = ":"+user->getNickname()+" PRIVMSG #"+chan+' '+cmd.getMsg()+"\r\n";
-					std::cout<<"response : "<<response<<std::endl;
-					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
-				}
-			}
-		}
-		return ;
+void	Server::join(Command cmd, User *user, std::string response){
+	//join channel and create the channel if it does not already exist
+	std::string channel = cmd.getParameters()[0];
+	std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
+	std::map<std::string, std::vector<User *> >::iterator it = this->channels.find(channel);
+	if (it == this->channels.end()) 
+	{ //channel not exist
+		std::vector<User *> myVector;
+		myVector.push_back(user);
+		this->channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
 	}
-	reply(-1, ERR_CANNOTSENDTOCHAN, user, (*this));
+	else 
+	{ //the channel already exists
+		this->channels[channel].push_back(user);
+	}
+	response = ":" + user->getFullname() +" JOIN " + channel;
+	//send the join response to all the user in the channel
+	for (std::vector<User *>::iterator it_vector_user = this->channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) 
+		(*it_vector_user)->writeMessage(response);
+}
+
+void	Server::part(Command cmd, User *user, std::string response){
+	// Not enough parameters error
+	if (cmd.getNbParameters() == 0)
+		return (reply(-1, ERR_NEEDMOREPARAMS, user, *this));
+	std::string channel = cmd.getParameters()[0];
+	std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "/n";
+	std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+	if (it != channels.end()) { //channel exists
+		std::vector<User *> vector_user = channels[channel];
+		std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
+		if (it_vector_user == vector_user.end())	//user is not on the channel
+			return (reply(-1, ERR_NOTONCHANNEL, user, *this));
+		vector_user.erase(it_vector_user);
+		response = ":myserv PART #" + channel;
+		send(user->getFd(), response.c_str(), response.length(), 0);
+		//send this part response to all the user in the channel
+		for (it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
+			send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
+	} else	//channel does not exist
+		return (reply(-1, ERR_NOSUCHCHANNEL, user, *this));
 }

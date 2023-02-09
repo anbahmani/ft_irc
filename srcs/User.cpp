@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/07 18:56:28 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/07 19:15:10 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,11 @@ void User::setIRCOp(bool state)
 }
 
 // Specifics methods
+
+void User::writeMessage(std::string message){
+	message += "\r\n";
+	write(this->fd, message.c_str(), message.length());
+}
 
 // void User::incrEventHooked(void){
 // 	this->event_hooked = static_cast<e_event>(this->event_hooked + 1);
