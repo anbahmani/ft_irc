@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 18:14:52 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 20:53:17 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -220,7 +220,7 @@ void	Server::BuildServer()
 						state = 1;
 						user = get_user_by_fd(events[i].data.fd);
 					}
-					if (std::count(str.begin(), str.end(), '\n') <= 1)
+					if (str.find("\r\n") == std::string::npos)
 					{
 						Command cmd(str.substr(0, str.find('\n')));
 						if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
@@ -277,15 +277,15 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			}
-			if (!(cmd.getParameters()[0].compare("REQ")))
+			else if (!(cmd.getParameters()[0].compare("REQ")))
 			{
 				std::string response = "CAP * ACK multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 
     		}
-			if ((cmd.getParameters()[0].find("END")) != std::string::npos)
-			{\
+			else if (!(cmd.getParameters()[0].compare("END")))
+			{
 					std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\r\n";
 					send(user->getFd(), response.c_str(), response.length(), 0);
 					response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\r\n";
