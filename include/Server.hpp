@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:58:35 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 20:58:18 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,10 @@
 # include "irc.hpp"
 # include "User.hpp"
 # include "Command.hpp"
+# include "Channel.hpp"
 
 class User;
+class Channel;
 
 class Server
 {
@@ -42,7 +44,7 @@ class Server
 		std::string			getPortNum(void) const;
 		int					getRc(void) const;
 		std::map<std::string, User *>	getUsers(void) const;
-		void 				add_client(int server, int epoll_instance, int *num_sockets, epoll_event event);
+		void 				add_user(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
 		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event);
 		void				join(Command cmd, User *user, std::string response);
@@ -53,9 +55,9 @@ class Server
 		
 	private:
 	
-		std::vector<pollfd> _client_fds;
+		std::vector<pollfd> _user_fds;
 		std::map<std::string, User *>	_users;
-		std::map<std::string, std::vector<User *> > channels;
+		std::map<std::string, Channel *> channels;
 		struct sockaddr_in	_server_addr;
 		int					_server_socket;
 		std::string			_portNum;

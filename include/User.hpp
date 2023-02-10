@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:47:53 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 20:59:34 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,20 +19,19 @@
 class User
 {
 	private:
-		//struct sockaddr_in	address;
-		int					fd;
-		std::string		username;
-		std::string		nickname;
-		bool			_op;
-		bool			_i;
-		bool			_w;
-		time_t			lastPong;
-		time_t			lastPing;
-		bool			dead;
+		int								fd;
+		std::string						username;
+		std::string						nickname;
+		std::string						fullname;
+		std::string						_channel;
+		bool							_op;
+		bool							_i;
+		bool							_w;
+		std::vector<std::string>		channels;
+		time_t							lastPong;
+		time_t							lastPing;
+		bool							dead;
 
-
-		std::string		fullname;
-		//e_event			event_hooked;
 	public:
 		// Constructors
 		User(int fd);
@@ -51,9 +50,9 @@ class User
 		bool 		get_i(void) const;
 		bool 		get_w(void) const;
 		std::string	getMode(void) const;
-	
+		std::string	getChannel(void) const;
 		std::string getFullname(void);
-		//e_event 	getEventHooked(void);
+		
 
 		void setUsername(std::string);
 		void setPong(time_t);
@@ -62,9 +61,10 @@ class User
 		void setFullname(std::string);
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);
+		void setChannel(std::string channel);
 		// Specific methods
-		void writeMessage(std::string message);
-		// void incrEventHooked(void);
+		void	writeMessage(std::string message);
+		void	addChannel(const std::string& channel);
 };
 
 #endif

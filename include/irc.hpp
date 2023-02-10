@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:11:38 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 20:58:02 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,13 @@
 # include "User.hpp"
 # include "Server.hpp"
 # include "Command.hpp"
+# include "Channel.hpp"
 
 
 class Server;
 extern bool g_signal;
 // replies.cpp
-void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server);
+void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server, Channel *chan);
 void	display(std::string to_display, User *user);
 
 // utils.cpp
@@ -46,11 +47,15 @@ int		check_mode(std::string mode);
 int		check_if_mode(User *user, std::string mode);
 int		check_if_not_mode(User *user, std::string mode);
 
-enum e_event { 
-	CAP_HOOKED,
-	PASS_HOOKED,
-	NICK_HOOKED,
-	USER_HOOKED
-	};
+//Channel modes
+#define     KEY         'k'
+#define     INVITE      'i'
+#define     LIMIT       'l'
+#define     MODERATE    'm'
+#define     NO_EXTERN   'n'
+#define     SECRET      's'
+#define     TOPIC       't'
+#define     BAN         'b'
+#define     CHANOP      'o'
 
 #endif
