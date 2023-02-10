@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 05:42:32 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 06:00:56 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -532,9 +532,9 @@ void Server::sendToChan(Command cmd, User *user)
 				if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
 				{
 					if (!cmd.getName().compare("PRIVMSG"))
-						response = ":"+user->getNickname()+" "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+						response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
 					else
-						response = ":"+user->getNickname()+" "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+						response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
 					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
 				}
 				std::cout<<"response : "<<response<<std::endl;
