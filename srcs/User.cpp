@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 03:45:47 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 07:10:11 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/User.hpp"
 
-User::User(int fd) : fd(fd), _op(false), _i(true), _w(false)
+User::User(int fd) : fd(fd), _op(false), _i(true), _w(false) , lastPong(std::time(0)), lastPing(std::time(0)), dead(false)
 {
 }
 
@@ -31,6 +31,10 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
+bool User::getDead(void){
+	return this->dead;
+}
+
 std::string User::getFullname(void){
 	return this->fullname;
 }
@@ -38,6 +42,16 @@ std::string User::getFullname(void){
 int	User::getFd(void)
 {
 	return this->fd;
+}
+
+time_t	User::getPong(void)
+{
+	return this->lastPong;
+}
+
+time_t	User::getPing(void)
+{
+	return this->lastPong;
 }
 
 bool User::getIRCOp(void)
@@ -71,8 +85,23 @@ std::string	User::getMode(void) const
 
 // Setters
 
+void User::setDead(bool dead)
+{
+	this->dead = dead;
+}
+
 void User::setUsername(std::string username){
 	this->username = username;
+	return ;
+}
+
+void User::setPong(time_t time){
+	this->lastPong = time;
+	return ;
+}
+
+void User::setPing(time_t time){
+	this->lastPing = time;
 	return ;
 }
 

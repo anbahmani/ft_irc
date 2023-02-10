@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 04:15:09 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 06:11:38 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,11 @@
 # include <sys/epoll.h>
 # include <sstream>
 # include <csignal>
+# include <ctime>
 # include "User.hpp"
 # include "Server.hpp"
 # include "Command.hpp"
+
 
 class Server;
 extern bool g_signal;

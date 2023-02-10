@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 05:41:19 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 06:58:35 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,12 @@ class Server
 		std::map<std::string, User *>	getUsers(void) const;
 		void 				add_client(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
-		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
+		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event);
 		void				join(Command cmd, User *user, std::string response);
 		void				part(Command cmd, User *user, std::string response);
 		static void			signal_handler(int);
+		void 				checkDeath(int *num_event);
+		void 				pingAll();
 		
 	private:
 	

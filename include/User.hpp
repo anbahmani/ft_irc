@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 01:56:24 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 06:47:53 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,10 @@ class User
 		bool			_op;
 		bool			_i;
 		bool			_w;
+		time_t			lastPong;
+		time_t			lastPing;
+		bool			dead;
+
 
 		std::string		fullname;
 		//e_event			event_hooked;
@@ -37,10 +41,13 @@ class User
 		~User();
 
 		//Getters
-		int	getFd(void);
+		int			getFd(void);
 		std::string getUsername(void);
 		std::string getNickname(void);
-		bool getIRCOp(void);
+		time_t		getPong();
+		time_t		getPing();
+		bool		getDead();
+		bool 		getIRCOp(void);
 		bool 		get_i(void) const;
 		bool 		get_w(void) const;
 		std::string	getMode(void) const;
@@ -49,6 +56,9 @@ class User
 		//e_event 	getEventHooked(void);
 
 		void setUsername(std::string);
+		void setPong(time_t);
+		void setPing(time_t);
+		void setDead(bool);
 		void setFullname(std::string);
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);

@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:00:56 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 07:23:39 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,7 @@ void	Server::BuildServer()
 	int		state = 0;
 	while (!g_signal)
 	{
+		pingAll();
 		num_event = epoll_wait(this->_rc, events, num_socket, -1);
 		for (int i = 0; i < num_event; i++)
 		{
@@ -197,6 +198,7 @@ void	Server::BuildServer()
 					epoll_ctl(this->_rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
 					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
 					close(events[i].data.fd);
+					num_event--;
 				}
 				else
 				{
@@ -219,7 +221,7 @@ void	Server::BuildServer()
 					while ((pos = str.find('\n')) != std::string::npos)
 					{
 						Command cmd(str.substr(0, pos - 1));
-						if(execute_cmd(cmd, user, events[i], this->_rc) == 0)
+						if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
 							x = 0;
 						str.erase(0, pos + 1);
 					}
@@ -231,11 +233,13 @@ void	Server::BuildServer()
 				}
 			}
 		}
+		pingAll();
+		checkDeath(&num_event);
     }
 	(void) (num_socket);
 }
 
-int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc)
+int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event)
 {
 	std::string response;
 	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
@@ -331,7 +335,13 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				}
 			break;
 		case PING:
-				response = "PONG localhost:"+_portNum+"\r\n";
+				response = "PONG localhost:"+_portNum+" "+cmd.getMsg()+"\r\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				std::cout<<"response : "<<response<<std::endl;
+			break;
+		case PONG:
+				user->setPong(std::time(0));
+				response = "PING localhost:"+_portNum+" "+cmd.getMsg()+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
@@ -359,6 +369,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
 				_users.erase(user->getNickname());
 				close(event.data.fd);
+				(*num_event)--;
 			break ;
 		case JOIN: 
 		{//join channel and create the channel if it does not already exist
@@ -471,6 +482,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break ;
 		}
 	}
+	(void)(*num_event);
 	return 1;
 }
 
@@ -543,4 +555,42 @@ void Server::sendToChan(Command cmd, User *user)
 		return ;
 	}
 	return (reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, (*this)));
+}
+
+void Server::checkDeath(int *num_event)
+{
+	std::string str;
+	User	*tmp;
+	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (it->second->getPong() + 60 < std::time(0))
+		{
+			tmp = it->second;
+			std::cout << "Connection lost by "<< tmp->getNickname()<< std::endl;
+			//Suppresion du socket de l'epoll
+			epoll_ctl(this->_rc, EPOLL_CTL_DEL, tmp->getFd(), NULL);
+			close(tmp->getFd());
+			_users.erase(tmp->getNickname());
+			delete tmp;
+			(*num_event)--;
+		}
+	}
+	(void)(num_event);
+}
+
+void Server::pingAll()
+{
+	std::string str;
+	std::stringstream ss;
+	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (it->second->getPing() + 60 < std::time(0))
+		{
+			it->second->setPing(std::time(0));
+			ss<<std::time(0);
+			str = "PING localhost:"+_portNum+" "+ss.str()+"\r\n";
+			send(it->second->getFd(), str.c_str(), str.length(), 0);
+			std::cout<<"response : "<<str<<std::endl;
+		}
+	}
 }
