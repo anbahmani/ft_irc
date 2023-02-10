@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:00:56 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 06:26:13 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,6 @@ Server::Server(char *port, std::string pass) : _server_socket(0), _portNum(port)
 Server::Server(void) : _name(SERVER_NAME){}
 
 Server::~Server() {
-	//clean socket du server pour chaque fd
-	//close les fd
-	//delete les user
 	std::cout << "-------------\nShutting down server.\n---------------------\n";
 	if (_server_socket > 0)
 		close(_server_socket);
@@ -42,7 +39,6 @@ Server::~Server() {
 		delete it->second;
 	if (_rc > 0)
 		close(_rc);
-	//std::cout << "test yo" <<std::endl;
 }
 
 Server &Server::operator=(const Server &server){
@@ -82,11 +78,9 @@ User				*Server::get_user_by_fd(int fd)
 {
 	for (std::map<std::string, User *>::iterator it = this->_users.begin(); it != _users.end(); it++)
 	{
-		std::cout<<"rec =>"<<it->second->getFd()<<std::endl;
 		if (fd == it->second->getFd())
 			return (it->second);	
 	}
-	std::cout<<"ici\n";
 	return (NULL);
 }
 
@@ -138,8 +132,13 @@ void	Server::BuildServer()
 	struct epoll_event server_event;
 	char		buffer[1024];
 	int			tmp = 0;
+	int			optval = 1;
 	// Creation socket
-	if (!(_server_socket = socket(AF_INET, SOCK_STREAM, 0))){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
+	if ((_server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
+		std::cout << "Error:\tCreation socket failed." << std::endl;
+		return ;
+	}
+	if (setsockopt(_server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &optval, sizeof(optval)) < 0){
 		std::cout << "Error:\tCreation socket failed." << std::endl;
 		return ;
 	}
@@ -162,7 +161,7 @@ void	Server::BuildServer()
 	
 	// Passage mode ecoute du socket
 	std::cout << "=> Socket now listening." << std::endl;
-	if (listen(_server_socket, 1) < 0)
+	if (listen(_server_socket, _server_addr.sin_port) < 0)
 		return ;
 	
 	this->_rc = epoll_create(100);
@@ -182,7 +181,6 @@ void	Server::BuildServer()
 		num_event = epoll_wait(this->_rc, events, num_socket, -1);
 		for (int i = 0; i < num_event; i++)
 		{
-			//std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
 			if (events[i].data.fd == _server_socket && events[i].events == EPOLLIN) //si quelqu'un veut se connecter au serveur
 			{
 				add_client(_server_socket, this->_rc, &num_socket, events[i]);
@@ -238,12 +236,6 @@ void	Server::BuildServer()
 int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc)
 {
 	std::string response;
-	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
-	// 		std::cout<<cmd.getName()<<'\n';
-	// std::vector<std::string> param = cmd.getParameters();
-	// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
-	// 	std::cout<<"param => "<<*iter<<"\n";
-	// std::cout<<std::endl;
 	switch (cmd.cmds.find(cmd.getName())->second)
 	{
 		case CAP:
@@ -472,49 +464,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		}
 	}
 	return 1;
-}
-
-void	Server::join(Command cmd, User *user, std::string response){
-	//join channel and create the channel if it does not already exist
-	std::string channel = cmd.getParameters()[0];
-	std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
-	std::map<std::string, std::vector<User *> >::iterator it = this->channels.find(channel);
-	if (it == this->channels.end()) 
-	{ //channel not exist
-		std::vector<User *> myVector;
-		myVector.push_back(user);
-		this->channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
-	}
-	else 
-	{ //the channel already exists
-		this->channels[channel].push_back(user);
-	}
-	response = ":" + user->getFullname() +" JOIN " + channel;
-	//send the join response to all the user in the channel
-	for (std::vector<User *>::iterator it_vector_user = this->channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) 
-		(*it_vector_user)->writeMessage(response);
-}
-
-void	Server::part(Command cmd, User *user, std::string response){
-	// Not enough parameters error
-	if (cmd.getNbParameters() == 0)
-		return (reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this));
-	std::string channel = cmd.getParameters()[0];
-	std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "/n";
-	std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
-	if (it != channels.end()) { //channel exists
-		std::vector<User *> vector_user = channels[channel];
-		std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
-		if (it_vector_user == vector_user.end())	//user is not on the channel
-			return (reply(-1, ERR_NOTONCHANNEL, user, &cmd, *this));
-		vector_user.erase(it_vector_user);
-		response = ":myserv PART #" + channel;
-		send(user->getFd(), response.c_str(), response.length(), 0);
-		//send this part response to all the user in the channel
-		for (it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
-			send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
-	} else	//channel does not exist
-		return (reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this));
 }
 
 void Server::sendToChan(Command cmd, User *user)

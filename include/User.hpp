@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 01:56:24 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 05:42:29 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 class User
 {
 	private:
-		//struct sockaddr_in	address;
 		int					fd;
 		std::string		username;
 		std::string		nickname;
@@ -28,7 +27,6 @@ class User
 		bool			_w;
 
 		std::string		fullname;
-		//e_event			event_hooked;
 	public:
 		// Constructors
 		User(int fd);
@@ -46,7 +44,6 @@ class User
 		std::string	getMode(void) const;
 	
 		std::string getFullname(void);
-		//e_event 	getEventHooked(void);
 
 		void setUsername(std::string);
 		void setFullname(std::string);
@@ -54,7 +51,6 @@ class User
 		void setMode(std::string mode, bool state);
 		// Specific methods
 		void writeMessage(std::string message);
-		// void incrEventHooked(void);
 };
 
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 04:52:52 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 05:44:22 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,6 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) /
 
 	std::cout << response.c_str() << std::endl;
 	write(user->getFd(), response.c_str(), response.length());
-	// send(user->getFd(), response.c_str(), response.length(), 0);
 	return ;
 }
 

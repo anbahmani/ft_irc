@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 04:15:09 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 05:42:16 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,5 @@ int		check_mode(std::string mode);
 int		check_if_mode(User *user, std::string mode);
 int		check_if_not_mode(User *user, std::string mode);
 
-enum e_event { 
-	CAP_HOOKED,
-	PASS_HOOKED,
-	NICK_HOOKED,
-	USER_HOOKED
-	};
 
 #endif

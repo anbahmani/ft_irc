@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 03:45:47 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 05:42:14 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,3 @@ void User::writeMessage(std::string message){
 	message += "\r\n";
 	write(this->fd, message.c_str(), message.length());
 }
-
-// void User::incrEventHooked(void){
-// 	this->event_hooked = static_cast<e_event>(this->event_hooked + 1);
-// }
