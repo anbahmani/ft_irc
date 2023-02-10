@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 04:22:47 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 04:51:31 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,9 +92,6 @@ User				*Server::get_user_by_fd(int fd)
 
 void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_event event)
 {	
-	//nb de char lu
-	// int				rc;
-	
 	//Socket pour le client
 	int           client;
 	
@@ -120,9 +117,6 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 	//On instancie un nouvel utilisateur
 
 	(void)(event);
-	// char		buffer[1024];
-	// std::string	data;
-	// int i = 0;
 	std::cout<<"fd =>"<<client<<std::endl;
 	if (client < 0)
 	{
@@ -130,51 +124,6 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 		return ;
 	}
 	fcntl(client, F_SETFL, O_NONBLOCK);
-	// while (true)
-	// {
-	// 	if (client_event.events == EPOLLIN)
-	// 	{
-	// 		rc = recv(client, buffer, sizeof(buffer), 0);
-	// 		if (rc <= 0)
-	// 		{
-	// 			std::cout << "Connection closed by client0." << std::endl;
-	// 			return ;
-	// 		}
-	// 		buffer[rc] = 0;
-	// 		data = buffer;
-
-	// 		size_t pos = 0;
-	// 		int x = 0;
-	// 		while ((pos = data.find('\n')) != std::string::npos)
-	// 		{
-	// 			Command cmd(data.substr(0, pos - 1));
-	// 			std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
-	// 			x = execute_cmd(cmd, user, event, epoll_instance);
-	// 			data.erase(0, pos + 1);
-	// 			if (cmd.getName().compare("PASS") == 0)
-	// 				i = 1;
-	// 			if(!x)
-	// 				return (delete user);
-	// 			else if(x == 2)
-	// 				break ;
-	// 		}
-	// 		if(x == 2)
-	// 			break ;
-	// 	}
-	// }
-	// if (!i)
-	// {
-	// 	std::string response = "NO PASSWORD\n";
-	// 	send(client, response.c_str(), response.length(), 0);
-	// 	epoll_ctl(rc, EPOLL_CTL_DEL, client, &event);
-	// 	delete user;
-	// 	return ;
-	// }
-	//On prepare la reponse d'authentification
-    
-	// std::cout<<"rep = "<<response<<std::endl;
-	
-
 	//On incremente notre nombre de client
   	(*num_sockets)++;
 	(void) (*num_sockets);
@@ -216,7 +165,7 @@ void	Server::BuildServer()
 	if (listen(_server_socket, 1) < 0)
 		return ;
 	
-	this->_rc = epoll_create(5);
+	this->_rc = epoll_create(100);
 	memset(&server_event, 0, sizeof(server_event));
 	server_event.data.fd = _server_socket;
 	server_event.events = EPOLLIN;
@@ -254,11 +203,13 @@ void	Server::BuildServer()
 					buffer[tmp] = 0;
 					User *user = NULL;
 					str = buffer;
+					int x = 1;
 					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
 					if (!get_user_by_fd(events[i].data.fd))
 					{
-							user = new User(events[i].data.fd);
-							state = 0;
+						std::cout<<"fd non reconnu "<<events[i].data.fd<<"\n";
+						user = new User(events[i].data.fd);
+						state = 0;
 					}
 					else
 					{
@@ -268,10 +219,11 @@ void	Server::BuildServer()
 					while ((pos = str.find('\n')) != std::string::npos)
 					{
 						Command cmd(str.substr(0, pos - 1));
-						execute_cmd(cmd, user, events[i], this->_rc);
+						if(execute_cmd(cmd, user, events[i], this->_rc) == 0)
+							x = 0;
 						str.erase(0, pos + 1);
 					}
-					if (!state)
+					if (state == 0 && x == 0)
 					{
 						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
@@ -331,31 +283,22 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			break;
 		case USER:
-			user->setUsername(cmd.getParameters()[0]);
+			user->setUsername(user->getNickname());
 			user->setFullname(cmd.getFName());
 			break;
 		case NICK:
+		{
 			//On check si le nickname est deja utilise
-			if (_users.find(cmd.getParameters()[0]) != _users.end())
-			{
-				std::string response = "NickName already used.\r\n";
-				std::cout<<response<<std::endl;
-				send(user->getFd(), response.c_str(), response.length(), 0);
-				//Suppresion du socket de l'epoll
-				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-				close(user->getFd());
-				delete user;
-				return 0;
-			}
-			else
-				user->setNickname(cmd.getParameters()[0]);
+			std::string tmp = cmd.getParameters()[0];
+			while (_users.find(tmp) != _users.end())
+				tmp.insert(0,"_");
+			user->setNickname(tmp);
+			return 0;
 			break;
+		}
 		case PRIVMSG:
 				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
-				{
-					std::cout<<"ici 0\n";
 					sendToChan(cmd, user);
-				}
 				else if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] != '#') //msg to user
 				{
 					if (_users.find(cmd.getParameters()[0]) != _users.end())
@@ -388,15 +331,12 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			std::string channel = cmd.getParameters()[0].c_str() + 1;
 			std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
 			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
-			if (it != channels.end()) { //channel exists
-				// response = ":"+user->getNickname()+" PART #" + channel +' '+cmd.getMsg()+"\r\n";
-				// send(user->getFd(), response.c_str(), response.length(), 0);
+			if (it != channels.end()) {
 				sendToChan(cmd, user);
 				std::vector<User *>::iterator it_vector_user = std::find(channels[channel].begin(), channels[channel].end(), user);
-				// std::cout<<"response : "<<response<<std::endl;
 				channels[channel].erase(it_vector_user);
-				// for (it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send this part response to all the user in the channel
-				// 	send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
+				if (channels[channel].size() < 1)
+					channels.erase(channel);
 			}
 			break ;
 		}
@@ -422,6 +362,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				channels[channel].push_back(user);
 			}
 			sendToChan(cmd, user);
+			break ;
 		}
 		case OPER:
 		{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 01:59:53 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 04:52:52 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) /
 	std::stringstream errconvert;
 	
 	rplconvert << rplcode;
-	rplconvert << errcode;
+	errconvert << errcode;
 
 	
 	switch (rplcode)
