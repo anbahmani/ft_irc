@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 05:42:14 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 11:38:21 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ User::~User(){
 		close(this->fd);
 }
 
+void	User::addChannel(const std::string& channel) { channels.push_back(channel); }
+
 //Getters
 
 std::string User::getUsername(void){
@@ -34,6 +36,11 @@ std::string User::getNickname(void){
 std::string User::getFullname(void){
 	return this->fullname;
 }
+
+std::string User::getChannel(void) const{
+	return (this->_channel);
+}
+
 
 int	User::getFd(void)
 {
@@ -104,6 +111,11 @@ void User::setMode(std::string mode, bool state)
 			this->_op = state;
 	}
 	return ;
+}
+
+void User::setChannel(std::string channel)
+{
+	this->_channel = channel;
 }
 
 // Specifics methods

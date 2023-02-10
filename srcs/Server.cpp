@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 08:06:31 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 11:46:51 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,49 +370,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			sendToChan(cmd, user);
 			break ;
 		}
-		case OPER:
-		{
-			
-			std::string name = cmd.getParameters()[0];
-			std::string pwd;
-			User *other = NULL;
-			
-			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
-			if (cmd.getNbParameters() == 2)
-				pwd = cmd.getParameters()[1];
-			else if (cmd.getNbParameters() < 2)
-			{
-				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
-				break ;
-			}
-			if (!get_user_by_fd(event.data.fd)->getNickname().compare(name))
-			{
-				user->setMode("IRCOP", true);
-				display("MODE " + user->getNickname() + " +o", user);
-				reply(RPL_YOUREOPER, -1, user, &cmd, *this);
-				break ;
-			}
-			std::map<std::string , User * >::iterator it = _users.find(name);
-			if (it != _users.end())
-				other = it->second;
-			else
-			{
-				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this);
-				break ;
-			}
-			if (pwd.compare(IRCOpwd) != 0)
-			{
-				reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this);
-				break ;
-			}
-			if (pwd.compare(IRCOpwd) == 0)
-			{
-				other->setMode("IRCOP", true);
-				display("MODE " + other->getNickname() + " +o", user);
-				reply(RPL_YOUREOPER, -1, other, &cmd, *this);
-			}
-			break ;
-		}
 		case MODE:
 		{
 			std::string name = cmd.getParameters()[0];
@@ -460,6 +417,59 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				}
 			}
 					
+			break ;
+		}
+		case INVITE:
+		{
+			std::string name;
+			std::string channel;
+			User *other = NULL;
+			
+			if (cmd.getNbParameters() < 2)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
+				break ;
+			}
+			name = cmd.getParameters()[0];
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			channel = cmd.getParameters()[1].erase(0, 1);
+			std::map<std::string , User * >::iterator it = _users.find(name);
+			std::map<std::string, Channel *>::iterator itt = channels.find(channel);
+			if (it != _users.end())
+				other = it->second;
+			if (itt == channels.end())
+			{
+				reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this);
+				break ;
+			}
+			if (it == _users.end())
+			{
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this);
+				break ;
+			}
+			if (user->getChannel() != channel)
+			{
+				reply(-1, ERR_NOTONCHANNEL, user, &cmd, *this);
+				break ;
+			}
+			if (other)
+			{
+				if (other->getChannel() == channel)
+				{
+					reply(-1, ERR_USERONCHANNEL, user, &cmd, *this);
+					break ;
+				}
+				if (other->get_i() == true && user->getIRCOp() == false)
+				{
+					reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this);
+					break ;
+				}
+				else
+				{
+					reply(RPL_INVITING, -1, user, &cmd, *this);
+					display(":" + user->getNickname() + " INVITE " + other->getNickname() + " #" + channel, other);
+				}
+			}
 			break ;
 		}
 	}
