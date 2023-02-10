@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 07:23:39 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 18:14:52 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,6 +138,7 @@ void	Server::BuildServer()
 	struct epoll_event server_event;
 	char		buffer[1024];
 	int			tmp = 0;
+	time_t		current = std::time(0);
 	// Creation socket
 	if (!(_server_socket = socket(AF_INET, SOCK_STREAM, 0))){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
 		std::cout << "Error:\tCreation socket failed." << std::endl;
@@ -193,10 +194,11 @@ void	Server::BuildServer()
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (tmp <= 0)
 				{
-					std::cout << "Connection closed by client2." << std::endl;
+					std::cout << "Connection closed by client." << std::endl;
 					//Suppresion du socket de l'epoll
 					epoll_ctl(this->_rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
-					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
+					if (get_user_by_fd(events[i].data.fd))
+						_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
 					close(events[i].data.fd);
 					num_event--;
 				}
@@ -218,22 +220,38 @@ void	Server::BuildServer()
 						state = 1;
 						user = get_user_by_fd(events[i].data.fd);
 					}
-					while ((pos = str.find('\n')) != std::string::npos)
+					if (std::count(str.begin(), str.end(), '\n') <= 1)
 					{
-						Command cmd(str.substr(0, pos - 1));
+						Command cmd(str.substr(0, str.find('\n')));
 						if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
 							x = 0;
-						str.erase(0, pos + 1);
+					}
+					else
+					{
+						while ((pos = str.find('\n')) != std::string::npos)
+						{
+							Command cmd(str.substr(0, pos - 1));
+							if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
+								x = 0;
+							str.erase(0, pos + 1);
+						}
 					}
 					if (state == 0 && x == 0)
 					{
 						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
+					else if (x == -1)
+						delete user;
 				}
 			}
 		}
-		pingAll();
+		if (std::time(0) % 30 == 0)
+		{
+			std::cout<<"Activity check.\n";
+			pingAll();
+			current = std::time(0);
+		}
 		checkDeath(&num_event);
     }
 	(void) (num_socket);
@@ -242,12 +260,14 @@ void	Server::BuildServer()
 int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event)
 {
 	std::string response;
-	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<'\n';
-	// 		std::cout<<cmd.getName()<<'\n';
+	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<std::endl;;
+	// 		std::cout<<cmd.getName()<<std::endl;
 	// std::vector<std::string> param = cmd.getParameters();
 	// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
-	// 	std::cout<<"param => "<<*iter<<"\n";
+	// 	std::cout<<"param => "<<*iter<<"|"<<std::endl;
 	// std::cout<<std::endl;
+	if (cmd.cmds.find(cmd.getName()) == cmd.cmds.end())
+		return 2;
 	switch (cmd.cmds.find(cmd.getName())->second)
 	{
 		case CAP:
@@ -264,8 +284,8 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::cout<<"response : "<<response<<std::endl;
 
     		}
-			if (!(cmd.getParameters()[0].compare("END")))
-			{
+			if ((cmd.getParameters()[0].find("END")) != std::string::npos)
+			{\
 					std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\r\n";
 					send(user->getFd(), response.c_str(), response.length(), 0);
 					response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\r\n";
@@ -279,11 +299,10 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PASS:
 			if ((cmd.getParameters()[0].compare(_password)))
 			{
-				//std::cout << "client => server: " << data << std::endl;
 				std::string response = "PASS rejected\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-				return 0;
+				return -1;
 			}
 			break;
 		case USER:
@@ -335,15 +354,16 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				}
 			break;
 		case PING:
-				response = "PONG localhost:"+_portNum+" "+cmd.getMsg()+"\r\n";
+				user->setPing(std::time(0));
+				response = "PONG " +cmd.getParameters()[0]+" localhost:"+_portNum+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PONG:
 				user->setPong(std::time(0));
-				response = "PING localhost:"+_portNum+" "+cmd.getMsg()+"\r\n";
-				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
+				// response = "PING " +cmd.getParameters()[0]+" localhost:"+_portNum+"\r\n";
+				// send(user->getFd(), response.c_str(), response.length(), 0);
+				// std::cout<<"response : "<<response<<std::endl;
 			break;
 		case WHOIS:
 				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getNickname()+" localhost * "+user->getFullname()+"\r\n";
@@ -563,7 +583,7 @@ void Server::checkDeath(int *num_event)
 	User	*tmp;
 	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
-		if (it->second->getPong() + 60 < std::time(0))
+		if (it->second->getPong() + 60 < std::time(0) && it->second->getPing() + 60 < std::time(0))
 		{
 			tmp = it->second;
 			std::cout << "Connection lost by "<< tmp->getNickname()<< std::endl;
@@ -584,11 +604,10 @@ void Server::pingAll()
 	std::stringstream ss;
 	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
-		if (it->second->getPing() + 60 < std::time(0))
+		if (it->second->getPing() + 30 < std::time(0))
 		{
-			it->second->setPing(std::time(0));
 			ss<<std::time(0);
-			str = "PING localhost:"+_portNum+" "+ss.str()+"\r\n";
+			str = "PING "+ss.str()+" localhost:"+_portNum+"\r\n";
 			send(it->second->getFd(), str.c_str(), str.length(), 0);
 			std::cout<<"response : "<<str<<std::endl;
 		}
