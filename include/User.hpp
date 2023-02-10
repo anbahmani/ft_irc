@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 11:38:15 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:57:57 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class User
 		std::string						nickname;
 		std::string						fullname;
 		std::string						_channel;
+		std::string						comment;
 		bool							_op;
 		bool							_i;
 		bool							_w;
@@ -46,6 +47,7 @@ class User
 		std::string	getMode(void) const;
 		std::string	getChannel(void) const;
 		std::string getFullname(void);
+		std::string getComment(void) const;
 		
 
 		void setUsername(std::string);
@@ -53,6 +55,7 @@ class User
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);
 		void setChannel(std::string channel);
+		void setComment(std::string comment);
 		// Specific methods
 		void	writeMessage(std::string message);
 		void	addChannel(const std::string& channel);

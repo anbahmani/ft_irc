@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 08:09:56 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:18:44 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,7 @@ int		whois();
 #define		MODE	12
 #define		PRIVMSG	13
 #define		NOTICE	14
+#define		KILL	15
 
 
 #define		RPL_WELCOME					001

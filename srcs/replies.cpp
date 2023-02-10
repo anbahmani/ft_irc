@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 13:59:26 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:41:27 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,7 +166,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			err = " :Bad Channel Key ";
 			break ;
 		case ERR_NOPRIVILEGES:      //481
-			err = "";
+			err = ":Your host has no privileges to perform the requested action";
 			break ;
 		case ERR_CHANOPRIVISNEEDED: //482
 			err = cmd->getParameters()[0] + " :You're not channel operator";

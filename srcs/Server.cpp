@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 14:09:17 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 20:59:42 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ Server::~Server() {
 	if (_server_socket > 0)
 		close(_server_socket);
 	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+		delete it->second;
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 		delete it->second;
 	if (_rc > 0)
 		close(_rc);
@@ -343,8 +345,11 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::vector<User *> vector_user = channels[channel]->getUser();
 				std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
 				vector_user.erase(it_vector_user);
-				if (vector_user.size() < 1)
+				//std::cout << "------------size here" << vector_user.size() << "-------------\n\n";
+				if (vector_user.size() < 1){
+					delete channels[channel];	
 					channels.erase(channel);
+				}
 			}
 			break ;
 		}
@@ -544,6 +549,38 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 					display(":" + user->getNickname() + " INVITE " + other->getNickname() + " #" + channel, other);
 				}
 			}
+			break ;
+		}
+		case KILL:
+		{
+			if (cmd.getNbParameters() < 1){
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+				break;
+			}
+			if (!user->getIRCOp()){
+				reply(-1, ERR_NOPRIVILEGES, user, &cmd, *this, NULL);
+				break;
+			}
+			std::string user_to_kill_name = cmd.getParameters()[0];
+			std::map<std::string, User *>::iterator it_vector_user = _users.find(user_to_kill_name);
+			if (it_vector_user == _users.end()){
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
+				break;
+			}
+			User *target = this->_users[user_to_kill_name];
+			std::map<std::string, Channel *>::iterator it_map_chann;
+			for (it_map_chann = channels.begin(); it_map_chann != channels.end(); it_map_chann++){
+				std::vector<User *> vector_user = it_map_chann->second->getUser();
+				std::vector<User *>::iterator it_vector_users = std::find(vector_user.begin(), vector_user.end(), target);
+				if (it_vector_users != vector_user.end())
+					vector_user.erase(it_vector_users);
+				if (vector_user.size() < 1)
+					channels.erase(it_map_chann->first);
+			}
+			_users.erase(user_to_kill_name);
+			std::cout << "The user " << user->getNickname() << " has killed the user" << user_to_kill_name << "\r\n";
+			if (cmd.getNbParameters() > 1)
+				target->setComment(cmd.getParameters()[1]);
 			break ;
 		}
 	}

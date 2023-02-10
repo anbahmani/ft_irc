@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 11:38:21 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:58:24 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,10 @@ std::string	User::getMode(void) const
 	return (mode);
 }
 
+std::string User::getComment(void) const {
+	return (this->comment);
+}
+
 
 // Setters
 
@@ -116,6 +120,10 @@ void User::setMode(std::string mode, bool state)
 void User::setChannel(std::string channel)
 {
 	this->_channel = channel;
+}
+
+void User::setComment(std::string comment){
+	this->comment = comment;
 }
 
 // Specifics methods
