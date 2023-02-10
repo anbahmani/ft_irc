@@ -1,5 +1,5 @@
-#include "Channel.hpp"
-#include "Server.hpp"
+#include "../include/Channel.hpp"
+#include "../include/Server.hpp"
 
 const std::string&  Channel::getName() const { return (this->name); }
 const std::string&  Channel::getTopic() const { return (this->topic); }

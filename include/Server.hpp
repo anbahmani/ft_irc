@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 07:05:54 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 08:09:56 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,10 @@
 # include "irc.hpp"
 # include "User.hpp"
 # include "Command.hpp"
+# include "Channel.hpp"
 
 class User;
+class Channel;
 
 class Server
 {

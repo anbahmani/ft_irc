@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/10 06:54:50 by abahmani          #+#    #+#             */
-/*   Updated: 2023/02/10 07:49:09 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 08:08:45 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include "Command.hpp"
 
 class Server;
+class User;
 
 class Channel
 {

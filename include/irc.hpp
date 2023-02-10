@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 07:02:34 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 08:10:39 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,5 +45,15 @@ int		check_mode(std::string mode);
 int		check_if_mode(User *user, std::string mode);
 int		check_if_not_mode(User *user, std::string mode);
 
+//Channel modes
+#define     KEY         'k'
+#define     INVITE      'i'
+#define     LIMIT       'l'
+#define     MODERATE    'm'
+#define     NO_EXTERN   'n'
+#define     SECRET      's'
+#define     TOPIC       't'
+#define     BAN         'b'
+#define     CHANOP      'o'
 
 #endif
