@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 07:10:11 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 21:06:50 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@ User::~User(){
 	if (this->fd > 0)
 		close(this->fd);
 }
+
+void	User::addChannel(const std::string& channel) { channels.push_back(channel); }
 
 //Getters
 
@@ -38,6 +40,11 @@ bool User::getDead(void){
 std::string User::getFullname(void){
 	return this->fullname;
 }
+
+std::string User::getChannel(void) const{
+	return (this->_channel);
+}
+
 
 int	User::getFd(void)
 {
@@ -80,6 +87,10 @@ std::string	User::getMode(void) const
 	if (this->_w == true)
 		mode += "w";
 	return (mode);
+}
+
+std::string User::getComment(void) const {
+	return (this->comment);
 }
 
 
@@ -135,13 +146,18 @@ void User::setMode(std::string mode, bool state)
 	return ;
 }
 
+void User::setChannel(std::string channel)
+{
+	this->_channel = channel;
+}
+
+void User::setComment(std::string comment){
+	this->comment = comment;
+}
+
 // Specifics methods
 
 void User::writeMessage(std::string message){
 	message += "\r\n";
 	write(this->fd, message.c_str(), message.length());
 }
-
-// void User::incrEventHooked(void){
-// 	this->event_hooked = static_cast<e_event>(this->event_hooked + 1);
-// }

@@ -38,6 +38,8 @@
 		cmds.insert(std::pair<std::string, int>("OPER", OPER));
 		cmds.insert(std::pair<std::string, int>("PRIVMSG", PRIVMSG));
 		cmds.insert(std::pair<std::string, int>("NOTICE", NOTICE));
+		cmds.insert(std::pair<std::string, int>("INVITE", INVITE));
+		cmds.insert(std::pair<std::string, int>("KILL", KILL));
 
 		return ;
 	}

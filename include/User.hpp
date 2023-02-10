@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:47:53 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 21:07:14 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,11 @@ class User
 		time_t			lastPong;
 		time_t			lastPing;
 		bool			dead;
+		std::string						fullname;
+		std::string						_channel;
+		std::string						comment;
+		std::vector<std::string>		channels;
 
-
-		std::string		fullname;
-		//e_event			event_hooked;
 	public:
 		// Constructors
 		User(int fd);
@@ -47,13 +48,14 @@ class User
 		time_t		getPong();
 		time_t		getPing();
 		bool		getDead();
-		bool 		getIRCOp(void);
+		bool		getIRCOp(void);
 		bool 		get_i(void) const;
 		bool 		get_w(void) const;
 		std::string	getMode(void) const;
-	
+		std::string	getChannel(void) const;
 		std::string getFullname(void);
-		//e_event 	getEventHooked(void);
+		std::string getComment(void) const;
+		
 
 		void setUsername(std::string);
 		void setPong(time_t);
@@ -62,9 +64,11 @@ class User
 		void setFullname(std::string);
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);
+		void setChannel(std::string channel);
+		void setComment(std::string comment);
 		// Specific methods
-		void writeMessage(std::string message);
-		// void incrEventHooked(void);
+		void	writeMessage(std::string message);
+		void	addChannel(const std::string& channel);
 };
 
 #endif
