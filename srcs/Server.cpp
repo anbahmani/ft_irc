@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 06:26:13 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 08:06:31 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ Server::~Server() {
 
 Server &Server::operator=(const Server &server){
 	if (this != &server){
-		_client_fds = server._client_fds;
+		_user_fds = server._user_fds;
 		_users = server._users;
 		channels = server.channels;
 		_server_addr = server._server_addr;
@@ -84,41 +84,41 @@ User				*Server::get_user_by_fd(int fd)
 	return (NULL);
 }
 
-void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_event event)
+void Server::add_user(int server, int epoll_instance, int *num_sockets, epoll_event event)
 {	
-	//Socket pour le client
-	int           client;
+	//Socket pour le user
+	int           user;
 	
-	//Pour stocker l'adresse du client (necessaire pour la fonction accept())
-	sockaddr_in   addr_client;
+	//Pour stocker l'adresse du user (necessaire pour la fonction accept())
+	sockaddr_in   addr_user;
 	
-	//Pour stocker la size de l'adresse client
-	socklen_t     addr_size = sizeof(addr_client);
+	//Pour stocker la size de l'adresse user
+	socklen_t     addr_size = sizeof(addr_user);
 
-	//pour specifier les events du client
-	struct epoll_event client_event;
+	//pour specifier les events du user
+	struct epoll_event user_event;
 
-	//On cree le socket client avec la fonction accept
-	client = accept(server, reinterpret_cast<sockaddr*>(&addr_client), &addr_size);
+	//On cree le socket user avec la fonction accept
+	user = accept(server, reinterpret_cast<sockaddr*>(&addr_user), &addr_size);
 
 	//On specifie les events	
-	client_event.events = EPOLLIN;
-	client_event.data.fd = client;
+	user_event.events = EPOLLIN;
+	user_event.data.fd = user;
 
-	//On ajoute le client a epoll
-	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
+	//On ajoute le user a epoll
+	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, user, &user_event);
 	
 	//On instancie un nouvel utilisateur
 
 	(void)(event);
-	std::cout<<"fd =>"<<client<<std::endl;
-	if (client < 0)
+	std::cout<<"fd =>"<<user<<std::endl;
+	if (user < 0)
 	{
 		std::cerr << "Error:\tsyscall failed.";
 		return ;
 	}
-	fcntl(client, F_SETFL, O_NONBLOCK);
-	//On incremente notre nombre de client
+	fcntl(user, F_SETFL, O_NONBLOCK);
+	//On incremente notre nombre de user
   	(*num_sockets)++;
 	(void) (*num_sockets);
 }
@@ -183,14 +183,14 @@ void	Server::BuildServer()
 		{
 			if (events[i].data.fd == _server_socket && events[i].events == EPOLLIN) //si quelqu'un veut se connecter au serveur
 			{
-				add_client(_server_socket, this->_rc, &num_socket, events[i]);
+				add_user(_server_socket, this->_rc, &num_socket, events[i]);
 			}
-			else if (events[i].events == EPOLLIN)//si l'event concerne un client qu'on a deja ajouter a epoll
+			else if (events[i].events == EPOLLIN)//si l'event concerne un user qu'on a deja ajouter a epoll
 			{
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (tmp <= 0)
 				{
-					std::cout << "Connection closed by client2." << std::endl;
+					std::cout << "Connection closed by user2." << std::endl;
 					//Suppresion du socket de l'epoll
 					epoll_ctl(this->_rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
 					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
@@ -267,7 +267,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PASS:
 			if ((cmd.getParameters()[0].compare(_password)))
 			{
-				//std::cout << "client => server: " << data << std::endl;
+				//std::cout << "user => server: " << data << std::endl;
 				std::string response = "PASS rejected\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -335,13 +335,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PART:
 		{
 			std::string channel = cmd.getParameters()[0].c_str() + 1;
-			std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
-			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			std::map<std::string, Channel *>::iterator it = channels.find(channel);
 			if (it != channels.end()) {
+				std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
 				sendToChan(cmd, user);
-				std::vector<User *>::iterator it_vector_user = std::find(channels[channel].begin(), channels[channel].end(), user);
-				channels[channel].erase(it_vector_user);
-				if (channels[channel].size() < 1)
+				std::vector<User *> vector_user = channels[channel]->getUsers();
+				std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
+				vector_user.erase(it_vector_user);
+				if (vector_user.size() < 1)
 					channels.erase(channel);
 			}
 			break ;
@@ -356,16 +357,15 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		{//join channel and create the channel if it does not already exist
 			std::string channel = cmd.getParameters()[0].c_str() + 1;
 			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
-			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			std::map<std::string, Channel *>::iterator it = channels.find(channel);
 			if (it == channels.end()) 
 			{ //channel not exist
-				std::vector<User *> myVector;
-				myVector.push_back(user);
-				channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
+				channels.insert(std::pair<std::string, Channel *>(channel, new Channel(this, channel)));
+				channels[channel]->addUser(user);
 			}
 			else 
 			{ //the channel already exists
-				channels[channel].push_back(user);
+				channels[channel]->addUser(user);
 			}
 			sendToChan(cmd, user);
 			break ;
@@ -472,21 +472,25 @@ void Server::sendToChan(Command cmd, User *user)
 	{
 		std::string response;
 		std::string chan = cmd.getParameters()[0].c_str() + 1;
-		std::map<std::string, std::vector<User *> >::iterator it = channels.find(chan);
+		std::map<std::string, Channel *>::iterator it = channels.find(chan);
 		//check if the chan exist and if the user is on it
-		if (it != channels.end() && std::find((*it).second.begin(), (*it).second.end(), user) != (*it).second.end())
+		if (it != channels.end() )
 		{
-			for (std::vector<User *>::iterator it_vector_user = channels[chan].begin(); it_vector_user < channels[chan].end(); it_vector_user++)
-			{
-				if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
+			std::vector<User *> vector_user = channels[chan]->getUsers();
+			if (std::find(vector_user.begin(), vector_user.end(), user) != vector_user.end())
+			{	
+				for (std::vector<User *>::iterator it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
 				{
-					if (!cmd.getName().compare("PRIVMSG"))
-						response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
-					else
-						response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
-					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
+					if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
+					{
+						if (!cmd.getName().compare("PRIVMSG"))
+							response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+						else
+							response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+						send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
+					}
+					std::cout<<"response : "<<response<<std::endl;
 				}
-				std::cout<<"response : "<<response<<std::endl;
 			}
 		}
 		return ;

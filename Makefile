@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+         #
+#    By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/13 02:16:29 by vahemere          #+#    #+#              #
-#    Updated: 2023/02/09 19:11:54 by vahemere         ###   ########.fr        #
+#    Updated: 2023/02/10 07:01:14 by abahmani         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ OBJS_DIR = objs
 SRCS_DIR = $(shell find srcs -type d)
 
 vpath %.cpp $(foreach dir, $(SRCS_DIR), $(dir))
-SRCS = main.cpp Server.cpp  User.cpp Command.cpp replies.cpp utils.cpp\
+SRCS = main.cpp Server.cpp  User.cpp Command.cpp Channel.cpp replies.cpp utils.cpp\
 
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 

@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 05:42:16 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 07:02:34 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@
 # include "User.hpp"
 # include "Server.hpp"
 # include "Command.hpp"
+# include "Channel.hpp"
 
 class Server;
 extern bool g_signal;
