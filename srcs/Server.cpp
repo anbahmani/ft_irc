@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 04:51:31 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 05:42:32 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,6 +312,20 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 					{
 						response = ":localhost 401 "+user->getNickname()+" :No such Nickname\r\n";
 						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
+						std::cout<<"response =>"<<response<<std::endl;
+					}
+				}
+			break;
+		case NOTICE:
+				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
+					sendToChan(cmd, user);
+				else if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] != '#') //msg to user
+				{
+					if (_users.find(cmd.getParameters()[0]) != _users.end())
+					{
+						response = ":"+user->getNickname()+" "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
+						display(response, (_users.find(cmd.getParameters()[0])->second));
+						//display(response, user);
 						std::cout<<"response =>"<<response<<std::endl;
 					}
 				}

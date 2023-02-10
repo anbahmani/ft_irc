@@ -37,6 +37,7 @@
 		cmds.insert(std::pair<std::string, int>("MODE", MODE));
 		cmds.insert(std::pair<std::string, int>("OPER", OPER));
 		cmds.insert(std::pair<std::string, int>("PRIVMSG", PRIVMSG));
+		cmds.insert(std::pair<std::string, int>("NOTICE", NOTICE));
 
 		return ;
 	}
