@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   irc.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 08:10:39 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 13:58:17 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@
 class Server;
 extern bool g_signal;
 // replies.cpp
-void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server);
+void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server, Channel *chan);
 void	display(std::string to_display, User *user);
 
 // utils.cpp

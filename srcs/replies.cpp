@@ -6,13 +6,13 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 11:35:03 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 13:59:26 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/irc.hpp"
 
-void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) // set rplcode or errcode to 0 if you dont have code to send.
+void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, Channel *chan) // set rplcode or errcode to 0 if you dont have code to send.
 {
 	std::string err = "";
 	std::string	rpl = "";
@@ -63,7 +63,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) /
 			rpl = "";
 			break ;
 		case RPL_CHANNELMODEIS:			//324
-			rpl = "";
+			rpl = cmd->getParameters()[0] + " " + chan->getModeChan();
 			break ;
 		case RPL_NOTOPIC:				//331
 			rpl = "";
