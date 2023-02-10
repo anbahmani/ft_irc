@@ -6,17 +6,13 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:48:15 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 01:51:14 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 01:31:22 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "include/Server.hpp"
 
-bool g_signal = false;
-
-void 	signal_handler(int) {
-	g_signal = true;
-}
+Server *server = NULL;
 
 int main(int ac, char **av)
 {
@@ -27,11 +23,8 @@ int main(int ac, char **av)
 	}
 	else
 	{
-		signal(SIGINT, signal_handler);
-		Server server(av[1], av[2]);
-		if (g_signal)
-			return (1);
-		server.BuildServer();
+		*server = Server(av[1], av[2]);
+		server->BuildServer();
 		//server.Running();
 	}
 	return (0);
@@ -44,7 +37,6 @@ int main(int ac, char **av)
 
 Probleme: 
 
-	- On ne peut pas se connecter avec un mot de passe faux, mais on peut sans mdp.
 	- La commande PART ne fonctionne pas
 	- connexion avec plus de 10 utilisateurs
 	- command op

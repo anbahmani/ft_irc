@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 18:53:40 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 01:50:52 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 # define PRINT_FUNC() std::cout << "[\033[36m" << __FUNCTION__ << "\033[0m] "\
   << __FILENAME__ << std::endl;
 
-Server::Server(char *port, std::string pass) : _portNum(port), _password(pass), _name("42IRC")  {}
+Server::Server(char *port, std::string pass) : _portNum(port), _password(pass), _name("42IRC"), _signal(false)  {}
 
 Server::~Server() {}
 
@@ -157,6 +157,24 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 	(void) (*num_sockets);
 }
 
+std::map<std::string, User *> Server::getUsers(void){
+	return (this->_users);
+}
+
+void 	Server::signal_handler(int) {
+	//clean socket du server pour chaque fd
+	//close les fd
+	//delete les user
+	std::map<std::string, User *>::iterator it;
+	std::map<std::string, User *> users = server->getUsers();
+	for (it = ){
+		
+	}
+	epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+	close(event.data.fd);
+	exit(0);
+}
+
 void	Server::BuildServer()
 {
 	struct epoll_event server_event;
@@ -196,6 +214,7 @@ void	Server::BuildServer()
 	struct epoll_event events[100];
 	std::string	str;
 	size_t pos;
+	signal(SIGINT, Server::signal_handler);
 	while (1)
 	{
 		num_event = epoll_wait(rc, events, num_socket, -1);

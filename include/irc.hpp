@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 02:13:11 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 01:51:34 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class Server;
 
 void	reply(int rplcode, int rplerror, User *user, Server &server);
 void	display(std::string to_display, User *user);
+Server *server = NULL;
 
 enum e_event { 
 	CAP_HOOKED,

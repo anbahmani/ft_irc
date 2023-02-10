@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 18:53:49 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 01:49:46 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,12 +37,14 @@ class Server
 		int					get_server_socket(void) const;
 		std::string			getNameServer(void) const;
 		std::string			getPortNum(void) const;
+		std::map<std::string, User *>	getUsers(void);
 		void 				add_client(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
 		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
 		void				join(Command cmd, User *user, std::string response);
 		void				part(Command cmd, User *user, std::string response);
-
+		static void				signal_handler(int);
+		
 	private:
 	
 		std::vector<pollfd> _client_fds;
