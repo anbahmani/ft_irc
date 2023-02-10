@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 04:40:34 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/09 19:24:17 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,7 +237,10 @@ void	Server::BuildServer()
 						str.erase(0, pos + 1);
 					}
 					if (!state)
+					{
+						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
+					}
 				}
 			}
 		}
@@ -385,22 +388,98 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			sendToChan(cmd, user);
 		}
-		case OPER:  // become admin
-			std::string pwd = cmd.getParameters()[1];
+		case OPER:
+		{
 			
-			if (cmd.getNbParameters() < 1)
-				std::cout << ERR_NEEDMOREPARAMS << std::endl;
-			if (pwd.compare(IRCOpwd) == 0)
+			std::string name = cmd.getParameters()[0];
+			std::string pwd;
+			User *other = NULL;
+			
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			if (cmd.getNbParameters() == 2)
+				pwd = cmd.getParameters()[1];
+			else if (cmd.getNbParameters() < 2)
 			{
-				user->setIRCOp(true);
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
+				break ;
+			}
+			if (!get_user_by_fd(event.data.fd)->getNickname().compare(name))
+			{
+				user->setMode("IRCOP", true);
 				display("MODE " + user->getNickname() + " +o", user);
-				reply(RPL_YOUREOPER, -1, user, (*this));
-				
+				reply(RPL_YOUREOPER, -1, user, &cmd, *this);
+				break ;
+			}
+			std::map<std::string , User * >::iterator it = _users.find(name);
+			if (it != _users.end())
+				other = it->second;
+			else
+			{
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this);
+				break ;
 			}
 			if (pwd.compare(IRCOpwd) != 0)
-				reply(-1, ERR_PASSWDMISMATCH, user, (*this));
-				
+			{
+				reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) == 0)
+			{
+				other->setMode("IRCOP", true);
+				display("MODE " + other->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, other, &cmd, *this);
+			}
 			break ;
+		}
+		case MODE:
+		{
+			std::string name = cmd.getParameters()[0];
+			std::string mode = "";
+			if (cmd.getNbParameters() > 1)
+				mode = cmd.getParameters()[1];
+			name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			
+			if (cmd.getNbParameters() < 1)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
+				break ;
+			}
+			if (cmd.getNbParameters() == 1 && name.compare(user->getNickname()) == 0)
+			{
+				reply(RPL_UMODEIS, -1, user, &cmd, *this);
+				break ;
+			}
+			if (name != user->getNickname())
+			{
+				reply(-1, ERR_USERSDONTMATCH, user, &cmd, *this);
+				break ;
+			}
+			if (!mode.empty())
+			{
+				if (!check_mode(mode))
+				{
+					reply(-1, ERR_UMODEUNKNOWNFLAG, user, &cmd, *this);
+					break ;
+				}
+				else
+				{
+					if (check_if_mode(user, mode))
+					{
+						display("MODE " + user->getNickname() + " " + mode, user);
+						break ;
+					}
+					if (check_if_not_mode(user, mode))
+					{
+						display("MODE " + user->getNickname() + " " + mode, user);
+						break ;
+					}
+				}
+			}
+					
+			break ;
+		}
 	}
 	return 1;
 }
@@ -430,5 +509,5 @@ void Server::sendToChan(Command cmd, User *user)
 		}
 		return ;
 	}
-	reply(-1, ERR_CANNOTSENDTOCHAN, user, (*this));
+	reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, (*this));
 }
