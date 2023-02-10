@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 01:50:52 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 04:22:47 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,36 @@
 # define PRINT_FUNC() std::cout << "[\033[36m" << __FUNCTION__ << "\033[0m] "\
   << __FILENAME__ << std::endl;
 
-Server::Server(char *port, std::string pass) : _portNum(port), _password(pass), _name("42IRC"), _signal(false)  {}
+Server::Server(char *port, std::string pass) : _server_socket(0), _portNum(port), _password(pass), _name(SERVER_NAME), _rc(0){}
 
-Server::~Server() {}
+Server::Server(void) : _name(SERVER_NAME){}
+
+Server::~Server() {
+	//clean socket du server pour chaque fd
+	//close les fd
+	//delete les user
+	std::cout << "-------------\nShutting down server.\n---------------------\n";
+	if (_server_socket > 0)
+		close(_server_socket);
+	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+		delete it->second;
+	if (_rc > 0)
+		close(_rc);
+	//std::cout << "test yo" <<std::endl;
+}
+
+Server &Server::operator=(const Server &server){
+	if (this != &server){
+		_client_fds = server._client_fds;
+		_users = server._users;
+		channels = server.channels;
+		_server_addr = server._server_addr;
+		_server_socket = server._server_socket;
+		_password = server._password;
+		_portNum = server._portNum;
+	}
+	return (*this);
+}
 
 struct sockaddr_in	Server::get_struct_sockaddr(void) const
 {
@@ -53,19 +80,20 @@ std::string	Server::getPortNum(void) const
 
 User				*Server::get_user_by_fd(int fd)
 {
-	std::map<std::string, User*>::iterator it;
-	for (it = this->_users.begin(); it != _users.end(); it++)
+	for (std::map<std::string, User *>::iterator it = this->_users.begin(); it != _users.end(); it++)
 	{
+		std::cout<<"rec =>"<<it->second->getFd()<<std::endl;
 		if (fd == it->second->getFd())
 			return (it->second);	
 	}
+	std::cout<<"ici\n";
 	return (NULL);
 }
 
 void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_event event)
 {	
 	//nb de char lu
-	int				rc;
+	// int				rc;
 	
 	//Socket pour le client
 	int           client;
@@ -90,89 +118,70 @@ void Server::add_client(int server, int epoll_instance, int *num_sockets, epoll_
 	epoll_ctl(epoll_instance, EPOLL_CTL_ADD, client, &client_event);
 	
 	//On instancie un nouvel utilisateur
-	User *user = new User(client);
-	
-	char		buffer[1024];
-	std::string	data;
-	int i = 0;
-	if (client < 0)
-			std::cerr << "Error:\tConnection failed.";
-	while (true)
-	{
-		if (client_event.events == EPOLLIN)
-		{
-			rc = recv(client, buffer, sizeof(buffer), 0);
-			if (rc <= 0)
-			{
-				std::cout << "Connection closed by client." << std::endl;
-				return ;
-			}
-			buffer[rc] = 0;
-			data = buffer;
 
-			size_t pos = 0;
-			int x = 0;
-			while ((pos = data.find('\n')) != std::string::npos)
-			{
-				Command cmd(data.substr(0, pos - 1));
-				std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
-				x = execute_cmd(cmd, user, event, epoll_instance);
-				data.erase(0, pos + 1);
-				if (cmd.getName().compare("PASS") == 0)
-					i = 1;
-				if(!x)
-					return (delete user);
-				else if(x == 2)
-					break ;
-			}
-			if(x == 2)
-				break ;
-		}
-	}
-	if (!i)
+	(void)(event);
+	// char		buffer[1024];
+	// std::string	data;
+	// int i = 0;
+	std::cout<<"fd =>"<<client<<std::endl;
+	if (client < 0)
 	{
-		std::string response = "NO PASSWORD\n";
-		send(client, response.c_str(), response.length(), 0);
-		epoll_ctl(rc, EPOLL_CTL_DEL, client, &event);
-		delete user;
+		std::cerr << "Error:\tsyscall failed.";
 		return ;
 	}
+	fcntl(client, F_SETFL, O_NONBLOCK);
+	// while (true)
+	// {
+	// 	if (client_event.events == EPOLLIN)
+	// 	{
+	// 		rc = recv(client, buffer, sizeof(buffer), 0);
+	// 		if (rc <= 0)
+	// 		{
+	// 			std::cout << "Connection closed by client0." << std::endl;
+	// 			return ;
+	// 		}
+	// 		buffer[rc] = 0;
+	// 		data = buffer;
+
+	// 		size_t pos = 0;
+	// 		int x = 0;
+	// 		while ((pos = data.find('\n')) != std::string::npos)
+	// 		{
+	// 			Command cmd(data.substr(0, pos - 1));
+	// 			std::cout<<"<--------------------->"<<'\n'<<data<<"<--------------------->"<<'\n'<<'\n';
+	// 			x = execute_cmd(cmd, user, event, epoll_instance);
+	// 			data.erase(0, pos + 1);
+	// 			if (cmd.getName().compare("PASS") == 0)
+	// 				i = 1;
+	// 			if(!x)
+	// 				return (delete user);
+	// 			else if(x == 2)
+	// 				break ;
+	// 		}
+	// 		if(x == 2)
+	// 			break ;
+	// 	}
+	// }
+	// if (!i)
+	// {
+	// 	std::string response = "NO PASSWORD\n";
+	// 	send(client, response.c_str(), response.length(), 0);
+	// 	epoll_ctl(rc, EPOLL_CTL_DEL, client, &event);
+	// 	delete user;
+	// 	return ;
+	// }
 	//On prepare la reponse d'authentification
-	std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\n";
     
-	std::cout<<"rep = "<<response<<std::endl;
+	// std::cout<<"rep = "<<response<<std::endl;
 	
-	send(client, response.c_str(), response.length(), 0);
-	response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\r\n";
-	send(client, response.c_str(), response.length(), 0);
-	response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023.\r\n";
-	send(client, response.c_str(), response.length(), 0);
-	response = ":localhost:"+_portNum+" 004 "+user->getNickname()+"\r\n";
-	send(client, response.c_str(), response.length(), 0);
-	
-	//On ajoute le User a la map
-	_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
+
 	//On incremente notre nombre de client
   	(*num_sockets)++;
 	(void) (*num_sockets);
 }
 
-std::map<std::string, User *> Server::getUsers(void){
-	return (this->_users);
-}
-
 void 	Server::signal_handler(int) {
-	//clean socket du server pour chaque fd
-	//close les fd
-	//delete les user
-	std::map<std::string, User *>::iterator it;
-	std::map<std::string, User *> users = server->getUsers();
-	for (it = ){
-		
-	}
-	epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-	close(event.data.fd);
-	exit(0);
+	g_signal = true;
 }
 
 void	Server::BuildServer()
@@ -181,11 +190,14 @@ void	Server::BuildServer()
 	char		buffer[1024];
 	int			tmp = 0;
 	// Creation socket
-	_server_socket = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET => adresse ip v4 || sock_stream protocole tcp
-	if (_server_socket < 0) 
+	if (!(_server_socket = socket(AF_INET, SOCK_STREAM, 0))){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
+		std::cout << "Error:\tCreation socket failed." << std::endl;
+		return ;
+	}
+	if (_server_socket < 0 || fcntl(_server_socket, F_SETFL, O_NONBLOCK) < 0) 
 	{
 		std::cout << "Error:\tCreation socket failed." << std::endl;
-		exit(EXIT_FAILURE);
+		return ;
 	}
 	std::cout << "\n=> Socket server has been created." << std::endl;
 	
@@ -196,58 +208,73 @@ void	Server::BuildServer()
 	if ((bind(_server_socket, (struct sockaddr*)&_server_addr,sizeof(_server_addr))) < 0) 
 	{
 		std::cout << "Error:\tbinding connection failed." << std::endl;
-		exit(EXIT_FAILURE);
+		return ;
 	}
 	
 	// Passage mode ecoute du socket
 	std::cout << "=> Socket now listening." << std::endl;
 	if (listen(_server_socket, 1) < 0)
-		exit(EXIT_FAILURE);
+		return ;
 	
-	int rc = epoll_create(5);
+	this->_rc = epoll_create(5);
 	memset(&server_event, 0, sizeof(server_event));
 	server_event.data.fd = _server_socket;
 	server_event.events = EPOLLIN;
-	epoll_ctl(rc, EPOLL_CTL_ADD, _server_socket, &server_event);
+	epoll_ctl(this->_rc, EPOLL_CTL_ADD, _server_socket, &server_event);
 	int num_socket = 1;
 	int num_event;
 	struct epoll_event events[100];
 	std::string	str;
 	size_t pos;
 	signal(SIGINT, Server::signal_handler);
-	while (1)
+	int		state = 0;
+	while (!g_signal)
 	{
-		num_event = epoll_wait(rc, events, num_socket, -1);
+		num_event = epoll_wait(this->_rc, events, num_socket, -1);
 		for (int i = 0; i < num_event; i++)
 		{
 			//std::cout<<"event fd = > "<<events[i].data.fd<< " srver socket "<<_server_socket<<std::endl; 
 			if (events[i].data.fd == _server_socket && events[i].events == EPOLLIN) //si quelqu'un veut se connecter au serveur
 			{
-				add_client(_server_socket, rc, &num_socket, events[i]);
-				/* Accepter le client, l'ajouter a l'instance epoll, num_sockets++ */
+				add_client(_server_socket, this->_rc, &num_socket, events[i]);
 			}
-			else if (events[i].events == EPOLLIN)
-			//else //si l'event concerne un client qu'on a deja ajouter a epoll
+			else if (events[i].events == EPOLLIN)//si l'event concerne un client qu'on a deja ajouter a epoll
 			{
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (tmp <= 0)
 				{
-					std::cout << "Connection closed by client." << std::endl;
+					std::cout << "Connection closed by client2." << std::endl;
 					//Suppresion du socket de l'epoll
-					epoll_ctl(rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
+					epoll_ctl(this->_rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
 					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
 					close(events[i].data.fd);
 				}
 				else
 				{
 					buffer[tmp] = 0;
+					User *user = NULL;
 					str = buffer;
 					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
+					if (!get_user_by_fd(events[i].data.fd))
+					{
+							user = new User(events[i].data.fd);
+							state = 0;
+					}
+					else
+					{
+						state = 1;
+						user = get_user_by_fd(events[i].data.fd);
+					}
 					while ((pos = str.find('\n')) != std::string::npos)
 					{
 						Command cmd(str.substr(0, pos - 1));
-						execute_cmd(cmd, get_user_by_fd(events[i].data.fd), events[i], rc);
+						execute_cmd(cmd, user, events[i], this->_rc);
 						str.erase(0, pos + 1);
+					}
+					if (!state)
+					{
+						std::cout << "USER ADD" << std::endl;
+						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
 				}
 			}
@@ -283,8 +310,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
     		}
 			if (!(cmd.getParameters()[0].compare("END")))
 			{
-				std::cout<<"resasdsadsa\n"<<std::endl;
-				return 2;
+					std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\r\n";
+					send(user->getFd(), response.c_str(), response.length(), 0);
+					response = ":localhost:"+_portNum+" 002 : Your host is localhost, running version 1.\r\n";
+					send(user->getFd(), response.c_str(), response.length(), 0);
+					response = ":localhost:"+_portNum+" 003 : This server was created 01/01/2023.\r\n";
+					send(user->getFd(), response.c_str(), response.length(), 0);
+					response = ":localhost:"+_portNum+" 004 "+user->getNickname()+"\r\n";
+					send(user->getFd(), response.c_str(), response.length(), 0);
 			}
 			break ;
 		case PASS:
@@ -306,6 +339,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			if (_users.find(cmd.getParameters()[0]) != _users.end())
 			{
 				std::string response = "NickName already used.\r\n";
+				std::cout<<response<<std::endl;
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				//Suppresion du socket de l'epoll
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -319,6 +353,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PRIVMSG:
 				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
 				{
+					std::cout<<"ici 0\n";
 					sendToChan(cmd, user);
 				}
 				else if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] != '#') //msg to user
@@ -344,19 +379,27 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case WHOIS:
-				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getUsername()+" localhost * "+user->getFullname()+"\r\n";
+				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getNickname()+" localhost * "+user->getFullname()+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PART:
-			if (!cmd.getParameters()[0].compare("localhost")) //logout
-			{
-				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
-				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-				_users.erase(user->getNickname());
-				close(event.data.fd);
+		{
+			std::string channel = cmd.getParameters()[0].c_str() + 1;
+			std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
+			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			if (it != channels.end()) { //channel exists
+				// response = ":"+user->getNickname()+" PART #" + channel +' '+cmd.getMsg()+"\r\n";
+				// send(user->getFd(), response.c_str(), response.length(), 0);
+				sendToChan(cmd, user);
+				std::vector<User *>::iterator it_vector_user = std::find(channels[channel].begin(), channels[channel].end(), user);
+				// std::cout<<"response : "<<response<<std::endl;
+				channels[channel].erase(it_vector_user);
+				// for (it_vector_user = channels[channel].begin(); it_vector_user < channels[channel].end(); it_vector_user++) //send this part response to all the user in the channel
+				// 	send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
 			}
 			break ;
+		}
 		case QUIT: //logout
 				std::cout << "Connection closed by "<<user->getNickname() <<'\n';
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
@@ -364,24 +407,114 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				close(event.data.fd);
 			break ;
 		case JOIN: 
-			this->join(cmd, user, response);
-			break ;
-		case OPER:  // become admin
-			std::string pwd = cmd.getParameters()[1];
+		{//join channel and create the channel if it does not already exist
+			std::string channel = cmd.getParameters()[0].c_str() + 1;
+			std::cout << "The user " << user->getNickname() << " joins the channel " << channel << "\r\n";
+			std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
+			if (it == channels.end()) 
+			{ //channel not exist
+				std::vector<User *> myVector;
+				myVector.push_back(user);
+				channels.insert(std::pair<std::string, std::vector<User *> >(channel, myVector));
+			}
+			else 
+			{ //the channel already exists
+				channels[channel].push_back(user);
+			}
+			sendToChan(cmd, user);
+		}
+		case OPER:
+		{
 			
-			if (cmd.getNbParameters() < 1)
-				std::cout << ERR_NEEDMOREPARAMS << std::endl;
-			if (pwd.compare(IRCOpwd) == 0)
+			std::string name = cmd.getParameters()[0];
+			std::string pwd;
+			User *other = NULL;
+			
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			if (cmd.getNbParameters() == 2)
+				pwd = cmd.getParameters()[1];
+			else if (cmd.getNbParameters() < 2)
 			{
-				user->setIRCOp(true);
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
+				break ;
+			}
+			if (!get_user_by_fd(event.data.fd)->getNickname().compare(name))
+			{
+				user->setMode("IRCOP", true);
 				display("MODE " + user->getNickname() + " +o", user);
-				reply(RPL_YOUREOPER, -1, user, (*this));
-				
+				reply(RPL_YOUREOPER, -1, user, &cmd, *this);
+				break ;
+			}
+			std::map<std::string , User * >::iterator it = _users.find(name);
+			if (it != _users.end())
+				other = it->second;
+			else
+			{
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this);
+				break ;
 			}
 			if (pwd.compare(IRCOpwd) != 0)
-				reply(-1, ERR_PASSWDMISMATCH, user, (*this));
-				
+			{
+				reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) == 0)
+			{
+				other->setMode("IRCOP", true);
+				display("MODE " + other->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, other, &cmd, *this);
+			}
 			break ;
+		}
+		case MODE:
+		{
+			std::string name = cmd.getParameters()[0];
+			std::string mode = "";
+			if (cmd.getNbParameters() > 1)
+				mode = cmd.getParameters()[1];
+			name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			
+			if (cmd.getNbParameters() < 1)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this);
+				break ;
+			}
+			if (cmd.getNbParameters() == 1 && name.compare(user->getNickname()) == 0)
+			{
+				reply(RPL_UMODEIS, -1, user, &cmd, *this);
+				break ;
+			}
+			if (name != user->getNickname())
+			{
+				reply(-1, ERR_USERSDONTMATCH, user, &cmd, *this);
+				break ;
+			}
+			if (!mode.empty())
+			{
+				if (!check_mode(mode))
+				{
+					reply(-1, ERR_UMODEUNKNOWNFLAG, user, &cmd, *this);
+					break ;
+				}
+				else
+				{
+					if (check_if_mode(user, mode))
+					{
+						display("MODE " + user->getNickname() + " " + mode, user);
+						break ;
+					}
+					if (check_if_not_mode(user, mode))
+					{
+						display("MODE " + user->getNickname() + " " + mode, user);
+						break ;
+					}
+				}
+			}
+					
+			break ;
+		}
 	}
 	return 1;
 }
@@ -410,7 +543,7 @@ void	Server::join(Command cmd, User *user, std::string response){
 void	Server::part(Command cmd, User *user, std::string response){
 	// Not enough parameters error
 	if (cmd.getNbParameters() == 0)
-		return (reply(-1, ERR_NEEDMOREPARAMS, user, *this));
+		return (reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this));
 	std::string channel = cmd.getParameters()[0];
 	std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "/n";
 	std::map<std::string, std::vector<User *> >::iterator it = channels.find(channel);
@@ -418,7 +551,7 @@ void	Server::part(Command cmd, User *user, std::string response){
 		std::vector<User *> vector_user = channels[channel];
 		std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
 		if (it_vector_user == vector_user.end())	//user is not on the channel
-			return (reply(-1, ERR_NOTONCHANNEL, user, *this));
+			return (reply(-1, ERR_NOTONCHANNEL, user, &cmd, *this));
 		vector_user.erase(it_vector_user);
 		response = ":myserv PART #" + channel;
 		send(user->getFd(), response.c_str(), response.length(), 0);
@@ -426,5 +559,33 @@ void	Server::part(Command cmd, User *user, std::string response){
 		for (it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
 			send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);
 	} else	//channel does not exist
-		return (reply(-1, ERR_NOSUCHCHANNEL, user, *this));
+		return (reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this));
+}
+
+void Server::sendToChan(Command cmd, User *user)
+{
+	if (channels.find(cmd.getParameters()[0].c_str() + 1) != channels.end())
+	{
+		std::string response;
+		std::string chan = cmd.getParameters()[0].c_str() + 1;
+		std::map<std::string, std::vector<User *> >::iterator it = channels.find(chan);
+		//check if the chan exist and if the user is on it
+		if (it != channels.end() && std::find((*it).second.begin(), (*it).second.end(), user) != (*it).second.end())
+		{
+			for (std::vector<User *>::iterator it_vector_user = channels[chan].begin(); it_vector_user < channels[chan].end(); it_vector_user++)
+			{
+				if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
+				{
+					if (!cmd.getName().compare("PRIVMSG"))
+						response = ":"+user->getNickname()+" "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+					else
+						response = ":"+user->getNickname()+" "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
+					send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
+				}
+				std::cout<<"response : "<<response<<std::endl;
+			}
+		}
+		return ;
+	}
+	return (reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, (*this)));
 }

@@ -6,13 +6,13 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/09 18:53:14 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 01:59:53 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/irc.hpp"
 
-void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode or errcode to 0 if you dont have code to send.
+void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) // set rplcode or errcode to 0 if you dont have code to send.
 {
 	std::string err = "";
 	std::string	rpl = "";
@@ -37,12 +37,13 @@ void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode 
 		case RPL_ISUPPORT:				//005
 			rpl = "";
 		case RPL_UMODEIS:				//221
-			rpl = "";
+			rpl = ": Your user mode is +" + user->getMode();
+			break ;
 		case RPL_WHOISUSER:				//311
 			rpl = "";
 		case RPL_ENDOFWHO:				//315
 			rpl = "";
-		case RPL_ENDOFWHOIS:				//318
+		case RPL_ENDOFWHOIS:			//318
 			rpl = "";
 		case RPL_LISTSTART:				//321
 			rpl = "";
@@ -72,15 +73,18 @@ void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode 
 			rpl = "";
 		case RPL_YOUREOPER:				//381
 			rpl = ": You are now an IRC operator";
+			break ;
 		default:
 			break;
 	}
-
+	
+	std::cout << errcode << std::endl;
 	switch (errcode)
 	{
-		case ERR_NOSUCHNICK:       //401
-			err = "";
-		case ERR_NOSUCHCHANNEL:    //403
+		case ERR_NOSUCHNICK:		//401
+			err = cmd->getParameters()[0] + ": No such nick/channel";
+			break ;
+		case ERR_NOSUCHCHANNEL:    	//403
 			err = ":No such channel";
 		case ERR_CANNOTSENDTOCHAN:  //404
 			err = "";
@@ -106,8 +110,9 @@ void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode 
 			err = ":You are not on that channel";
 		case ERR_USERONCHANNEL:     //443
 			err = "";
-		case ERR_NEEDMOREPARAMS:    //461
-			err = ":Not enough parameters";
+		case ERR_NEEDMOREPARAMS:	//461
+			err = cmd->getName() + ": Not enough parameters";
+			break ;
 		case ERR_ALREADYREGISTERED: //462
 			err = "";
 		case ERR_PASSWDMISMATCH:    //464
@@ -124,19 +129,22 @@ void	reply(int rplcode, int errcode, User *user, Server &server) // set rplcode 
 			err = "";
 		case ERR_CHANOPRIVISNEEDED: //482
 			err = "";
-		case ERR_UMODEUNKNOWNFLAG:  //501
-			err = "";
-		case ERR_USERSDONTMATCH:    //502
-			
+		case ERR_UMODEUNKNOWNFLAG:	//501
+			err = ": Unknown MODE flag";
+			break ;
+		case ERR_USERSDONTMATCH:	//502
+			err = ": Cant change mode for other users";
+			break ;
 		default:
-			break;
+			break ;
 	}
 
 	if (rplcode != -1)
-		response = ":localhost:" + server.getPortNum() + ' ' + rplconvert.str() + ' ' + user->getNickname() + rpl + " " + '\n';
+		response = ":localhost:" + server.getPortNum() + ' ' + rplconvert.str() + ' ' + user->getNickname() + rpl + ' ' + '\n';
 	else if (errcode != -1)
-		response = ":localhost:" + server.getPortNum() + ' ' + errconvert.str() + ' ' + user->getNickname() + err + " " + '\n';
+		response = ":localhost:" + server.getPortNum() + ' ' + errconvert.str() + ' ' + user->getNickname() + ' ' + err + ' ' + '\n';
 
+	std::cout << response.c_str() << std::endl;
 	write(user->getFd(), response.c_str(), response.length());
 	// send(user->getFd(), response.c_str(), response.length(), 0);
 	return ;

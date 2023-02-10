@@ -6,24 +6,24 @@
 #    By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/13 02:16:29 by vahemere          #+#    #+#              #
-#    Updated: 2023/02/07 12:04:08 by vahemere         ###   ########.fr        #
+#    Updated: 2023/02/09 19:11:54 by vahemere         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = irc
+NAME = ircserv
 
 OBJS_DIR = objs
 SRCS_DIR = $(shell find srcs -type d)
 
 vpath %.cpp $(foreach dir, $(SRCS_DIR), $(dir))
-SRCS = main.cpp Server.cpp  User.cpp Command.cpp replies.cpp\
+SRCS = main.cpp Server.cpp  User.cpp Command.cpp replies.cpp utils.cpp\
 
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 
 DEPS = $(OBJS:%.o=%.d)
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3 #-fsanitize=address
 
 #fonts color
 BLACK =      \033[30m

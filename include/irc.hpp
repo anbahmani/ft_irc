@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 01:51:34 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 04:15:09 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <stdlib.h>
+# include <fcntl.h>
 # include <unistd.h>
 # include <vector>
 # include <algorithm>
@@ -33,10 +34,15 @@
 # include "Command.hpp"
 
 class Server;
-
-void	reply(int rplcode, int rplerror, User *user, Server &server);
+extern bool g_signal;
+// replies.cpp
+void	reply(int rplcode, int rplerror, User *user, Command *cmd, Server &server);
 void	display(std::string to_display, User *user);
-Server *server = NULL;
+
+// utils.cpp
+int		check_mode(std::string mode);
+int		check_if_mode(User *user, std::string mode);
+int		check_if_not_mode(User *user, std::string mode);
 
 enum e_event { 
 	CAP_HOOKED,

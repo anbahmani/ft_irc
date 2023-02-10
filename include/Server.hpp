@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 01:49:46 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/10 02:51:48 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 # define 	SERVER_HPP
 
 # define 	MAX_USERS		10
-# define 	IRCOpwd			"admin\r\n"
+# define 	IRCOpwd			"admin"
+# define SERVER_NAME		"42IRC"
 
 # include "irc.hpp"
 # include "User.hpp"
@@ -27,7 +28,9 @@ class Server
 	public:
 	
 		Server(char *port, std::string pass);
+		Server(void);
 		~Server();
+		Server &operator=(const Server &server);
 		
 		void	BuildServer();
 		// void new_users();
@@ -37,13 +40,14 @@ class Server
 		int					get_server_socket(void) const;
 		std::string			getNameServer(void) const;
 		std::string			getPortNum(void) const;
-		std::map<std::string, User *>	getUsers(void);
+		int					getRc(void) const;
+		std::map<std::string, User *>	getUsers(void) const;
 		void 				add_client(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
 		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
 		void				join(Command cmd, User *user, std::string response);
 		void				part(Command cmd, User *user, std::string response);
-		static void				signal_handler(int);
+		static void			signal_handler(int);
 		
 	private:
 	
@@ -55,6 +59,7 @@ class Server
 		std::string			_portNum;
 		std::string			_password;
 		const std::string 	_name;
+		int					_rc;
 };
 
 // Commands
