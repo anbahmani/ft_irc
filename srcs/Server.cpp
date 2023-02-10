@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 21:01:26 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/11 00:26:41 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void	Server::BuildServer()
 	struct epoll_event server_event;
 	char		buffer[1024];
 	int			tmp = 0;
-	time_t		current = std::time(0);
+	//time_t		current = std::time(0);
 	int			optval = 1;
 	// Creation socket
 	if ((_server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
@@ -244,13 +244,13 @@ void	Server::BuildServer()
 				}
 			}
 		}
-		if (std::time(0) % 30 == 0)
-		{
-			std::cout<<"Activity check.\n";
-			pingAll();
-			current = std::time(0);
-		}
-		checkDeath(&num_event);
+		// if (std::time(0) % 30 == 0)
+		// {
+		// 	std::cout<<"Activity check.\n";
+		// 	pingAll();
+		// 	current = std::time(0);
+		// }
+		// checkDeath(&num_event);
     }
 	(void) (num_socket);
 }
@@ -300,8 +300,11 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::string response = "PASS rejected\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				close(user->getFd());
 				return -1;
 			}
+			else
+				user->setstate(1);
 			break;
 		case USER:
 			user->setUsername(user->getNickname());
@@ -309,13 +312,21 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break;
 		case NICK:
 		{
+			if (!user->getstate())
+			{
+				std::string response = "PASS NEEDED\r\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				close(user->getFd());
+				return -1;
+			}
 			//On check si le nickname est deja utilise
 			std::string tmp = cmd.getParameters()[0];
 			while (_users.find(tmp) != _users.end())
 				tmp.insert(0,"_");
 			user->setNickname(tmp);
 			return 0;
-			break;
+			
 		}
 		case PRIVMSG:
 				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
@@ -353,7 +364,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break;
 		case PING:
 				user->setPing(std::time(0));
-				response = "PONG " +cmd.getParameters()[0]+" localhost:"+_portNum+"\r\n";
+				response = "PONG localhost:"+_portNum+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			break;
@@ -372,14 +383,12 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		{
 			std::string channel = cmd.getParameters()[0].c_str() + 1;
 			std::map<std::string, Channel *>::iterator it = channels.find(channel);
-			if (it != channels.end()) {
+			if (it != channels.end() && channels[channel]) {
 				std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
 				user->setChannel("");
 				sendToChan(cmd, user);
-				std::vector<User *> vector_user = channels[channel]->getUser();
-				std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
-				vector_user.erase(it_vector_user);
-				if (vector_user.size() < 1)
+				channels[channel]->delUser(user);
+				if (channels[channel]->getUser().size() < 1)
 					channels.erase(channel);
 			}
 			break ;
@@ -414,175 +423,175 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		}
 
 		
-		case MODE:
-		{
-			std::string name = cmd.getParameters()[0];
-			std::string channel = "";
-			std::string mode = "";
-			Channel		*chan = NULL;
-			if (cmd.getNbParameters() > 1)
-				mode = cmd.getParameters()[1];
-			name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
-			name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
-			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+	// 	case MODE:
+	// 	{
+	// 		std::string name = cmd.getParameters()[0];
+	// 		std::string channel = "";
+	// 		std::string mode = "";
+	// 		Channel		*chan = NULL;
+	// 		if (cmd.getNbParameters() > 1)
+	// 			mode = cmd.getParameters()[1];
+	// 		name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
+	// 		name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
+	// 		name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
 
-			if (cmd.getNbParameters() < 1)
-			{
-				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (name[0] == '#')
-			{
-				channel = name.erase(0, 1);
-				std::map<std::string, Channel *>::iterator it = channels.find(channel);
-				if (it != channels.end())
-					chan = it->second;
-				else
-				{
-					reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this, NULL);
-					break ;
-				}
-				if (cmd.getNbParameters() > 1)
-					mode = cmd.getParameters()[1];
-				else
-				{
-					reply(RPL_CHANNELMODEIS, -1, user, &cmd, *this, chan);
-					break ;
-				}
-				if (mode.find("+l") != std::string::npos || mode.find("-l") != std::string::npos)
-				{
-					if (mode.find("+") != std::string::npos)
-					{
+	// 		if (cmd.getNbParameters() < 1)
+	// 		{
+	// 			reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (name[0] == '#')
+	// 		{
+	// 			channel = name.erase(0, 1);
+	// 			std::map<std::string, Channel *>::iterator it = channels.find(channel);
+	// 			if (it != channels.end())
+	// 				chan = it->second;
+	// 			else
+	// 			{
+	// 				reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this, NULL);
+	// 				break ;
+	// 			}
+	// 			if (cmd.getNbParameters() > 1)
+	// 				mode = cmd.getParameters()[1];
+	// 			else
+	// 			{
+	// 				reply(RPL_CHANNELMODEIS, -1, user, &cmd, *this, chan);
+	// 				break ;
+	// 			}
+	// 			if (mode.find("+l") != std::string::npos || mode.find("-l") != std::string::npos)
+	// 			{
+	// 				if (mode.find("+") != std::string::npos)
+	// 				{
 						
-					}
-					else
-					{
+	// 				}
+	// 				else
+	// 				{
 						
-					}
-				}
-				if (mode.find("+o") != std::string::npos || mode.find("-o") != std::string::npos)
-				{
-					if (mode.find("+") != std::string::npos)
-					{
+	// 				}
+	// 			}
+	// 			if (mode.find("+o") != std::string::npos || mode.find("-o") != std::string::npos)
+	// 			{
+	// 				if (mode.find("+") != std::string::npos)
+	// 				{
 						
-					}
-					else
-					{
+	// 				}
+	// 				else
+	// 				{
 						
-					}
-				}
-				if (mode.find("+m") != std::string::npos || mode.find("-m") != std::string::npos)
-				{
-					if (mode.find("+") != std::string::npos)
-					{
+	// 				}
+	// 			}
+	// 			if (mode.find("+m") != std::string::npos || mode.find("-m") != std::string::npos)
+	// 			{
+	// 				if (mode.find("+") != std::string::npos)
+	// 				{
 						
-					}
-					else
-					{
+	// 				}
+	// 				else
+	// 				{
 						
-					}
-				}
-				if (mode.find("+v") != std::string::npos || mode.find("-v") != std::string::npos)
-				{
-					if (mode.find("+") != std::string::npos)
-					{
+	// 				}
+	// 			}
+	// 			if (mode.find("+v") != std::string::npos || mode.find("-v") != std::string::npos)
+	// 			{
+	// 				if (mode.find("+") != std::string::npos)
+	// 				{
 						
-					}
-					else
-					{
+	// 				}
+	// 				else
+	// 				{
 						
-					}
-				}
-			}
-			if (cmd.getNbParameters() == 1 && name.compare(user->getNickname()) == 0)
-			{
-				reply(RPL_UMODEIS, -1, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (name != user->getNickname())
-			{
-				reply(-1, ERR_USERSDONTMATCH, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (!mode.empty())
-			{
-				if (!check_mode(mode))
-				{
-					reply(-1, ERR_UMODEUNKNOWNFLAG, user, &cmd, *this, NULL);
-					break ;
-				}
-				else
-				{
-					if (check_if_mode(user, mode))
-					{
-						display("MODE " + user->getNickname() + " " + mode, user);
-						break ;
-					}
-					if (check_if_not_mode(user, mode))
-					{
-						display("MODE " + user->getNickname() + " " + mode, user);
-						break ;
-					}
-				}
-			}
+	// 				}
+	// 			}
+	// 		}
+	// 		if (cmd.getNbParameters() == 1 && name.compare(user->getNickname()) == 0)
+	// 		{
+	// 			reply(RPL_UMODEIS, -1, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (name != user->getNickname())
+	// 		{
+	// 			reply(-1, ERR_USERSDONTMATCH, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (!mode.empty())
+	// 		{
+	// 			if (!check_mode(mode))
+	// 			{
+	// 				reply(-1, ERR_UMODEUNKNOWNFLAG, user, &cmd, *this, NULL);
+	// 				break ;
+	// 			}
+	// 			else
+	// 			{
+	// 				if (check_if_mode(user, mode))
+	// 				{
+	// 					display("MODE " + user->getNickname() + " " + mode, user);
+	// 					break ;
+	// 				}
+	// 				if (check_if_not_mode(user, mode))
+	// 				{
+	// 					display("MODE " + user->getNickname() + " " + mode, user);
+	// 					break ;
+	// 				}
+	// 			}
+	// 		}
 					
-			break ;
-		}
+	// 		break ;
+	// 	}
 
 		
-		case INVITE:
-		{
-			std::string name;
-			std::string channel;
-			User *other = NULL;
+	// 	case INVITE:
+	// 	{
+	// 		std::string name;
+	// 		std::string channel;
+	// 		User *other = NULL;
 			
-			if (cmd.getNbParameters() < 2)
-			{
-				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
-				break ;
-			}
-			name = cmd.getParameters()[0];
-			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
-			channel = cmd.getParameters()[1].erase(0, 1);
-			std::map<std::string , User * >::iterator it = _users.find(name);
-			std::map<std::string, Channel *>::iterator itt = channels.find(channel);
-			if (it != _users.end())
-				other = it->second;
-			if (itt == channels.end())
-			{
-				reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (it == _users.end())
-			{
-				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (user->getChannel() != channel)
-			{
-				reply(-1, ERR_NOTONCHANNEL, user, &cmd, *this, NULL);
-				break ;
-			}
-			if (other)
-			{
-				if (other->getChannel() == channel)
-				{
-					reply(-1, ERR_USERONCHANNEL, user, &cmd, *this, NULL);
-					break ;
-				}
-				if (other->get_i() == true && user->getIRCOp() == false)
-				{
-					reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, NULL);
-					break ;
-				}
-				else
-				{
-					reply(RPL_INVITING, -1, user, &cmd, *this, NULL);
-					display(":" + user->getNickname() + " INVITE " + other->getNickname() + " #" + channel, other);
-				}
-			}
-			break ;
-		}
+	// 		if (cmd.getNbParameters() < 2)
+	// 		{
+	// 			reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		name = cmd.getParameters()[0];
+	// 		name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+	// 		channel = cmd.getParameters()[1].erase(0, 1);
+	// 		std::map<std::string , User * >::iterator it = _users.find(name);
+	// 		std::map<std::string, Channel *>::iterator itt = channels.find(channel);
+	// 		if (it != _users.end())
+	// 			other = it->second;
+	// 		if (itt == channels.end())
+	// 		{
+	// 			reply(-1, ERR_NOSUCHCHANNEL, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (it == _users.end())
+	// 		{
+	// 			reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (user->getChannel() != channel)
+	// 		{
+	// 			reply(-1, ERR_NOTONCHANNEL, user, &cmd, *this, NULL);
+	// 			break ;
+	// 		}
+	// 		if (other)
+	// 		{
+	// 			if (other->getChannel() == channel)
+	// 			{
+	// 				reply(-1, ERR_USERONCHANNEL, user, &cmd, *this, NULL);
+	// 				break ;
+	// 			}
+	// 			if (other->get_i() == true && user->getIRCOp() == false)
+	// 			{
+	// 				reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, NULL);
+	// 				break ;
+	// 			}
+	// 			else
+	// 			{
+	// 				reply(RPL_INVITING, -1, user, &cmd, *this, NULL);
+	// 				display(":" + user->getNickname() + " INVITE " + other->getNickname() + " #" + channel, other);
+	// 			}
+	// 		}
+	// 		break ;
+	// 	}
 	}
 	(void)(*num_event);
 	return 1;
@@ -596,13 +605,14 @@ void Server::sendToChan(Command cmd, User *user)
 		std::string chan = cmd.getParameters()[0].c_str() + 1;
 		std::map<std::string, Channel *>::iterator it = channels.find(chan);
 		//check if the chan exist and if the user is on it
-		if (it != channels.end() )
+		if (it != channels.end() && channels[chan])
 		{
 			std::vector<User *> vector_user = channels[chan]->getUser();
 			if (std::find(vector_user.begin(), vector_user.end(), user) != vector_user.end())
 			{	
 				for (std::vector<User *>::iterator it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
 				{
+					std::cout<<"test\n";
 					if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
 					{
 						if (!cmd.getName().compare("PRIVMSG"))

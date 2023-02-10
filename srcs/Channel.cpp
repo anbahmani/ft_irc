@@ -10,7 +10,7 @@ Channel::~Channel() {}
 //getters
 std::vector<User *>    Channel::getUser(void) const
 {
-    return (this->users);
+    return (users);
 }
 
 std::string             Channel::getModeChan(void) const
@@ -45,4 +45,10 @@ void    Channel::setModeChan(std::string mode, bool state)
 void    Channel::addUser(User *user)
 {
     users.push_back(user);
+}
+
+void    Channel::delUser(User *user)
+{
+    std::vector<User *>::iterator it_vector_user = std::find(users.begin(), users.end(), user);
+    users.erase(it_vector_user);
 }

@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 20:59:34 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 23:39:45 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class User
 		std::vector<std::string>		channels;
 		time_t							lastPong;
 		time_t							lastPing;
-		bool							dead;
+		int								state;
 
 	public:
 		// Constructors
@@ -45,7 +45,7 @@ class User
 		std::string getNickname(void);
 		time_t		getPong();
 		time_t		getPing();
-		bool		getDead();
+		int			getstate();
 		bool 		getIRCOp(void);
 		bool 		get_i(void) const;
 		bool 		get_w(void) const;
@@ -57,7 +57,7 @@ class User
 		void setUsername(std::string);
 		void setPong(time_t);
 		void setPing(time_t);
-		void setDead(bool);
+		void setstate(int);
 		void setFullname(std::string);
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);

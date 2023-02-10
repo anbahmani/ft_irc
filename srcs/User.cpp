@@ -6,13 +6,13 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 20:56:16 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/10 23:40:15 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/User.hpp"
 
-User::User(int fd) : fd(fd), _op(false), _i(true), _w(false) , lastPong(std::time(0)), lastPing(std::time(0)), dead(false)
+User::User(int fd) : fd(fd), _op(false), _i(true), _w(false) , lastPong(std::time(0)), lastPing(std::time(0)), state(0)
 {
 }
 
@@ -33,8 +33,8 @@ std::string User::getNickname(void){
 	return this->nickname;
 }
 
-bool User::getDead(void){
-	return this->dead;
+int User::getstate(void){
+	return this->state;
 }
 
 std::string User::getFullname(void){
@@ -92,9 +92,9 @@ std::string	User::getMode(void) const
 
 // Setters
 
-void User::setDead(bool dead)
+void User::setstate(int state)
 {
-	this->dead = dead;
+	this->state = state;
 }
 
 void User::setUsername(std::string username){
