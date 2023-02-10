@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/09 19:24:17 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 03:42:35 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,7 +238,6 @@ void	Server::BuildServer()
 					}
 					if (!state)
 					{
-						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
 				}
@@ -387,10 +386,10 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				channels[channel].push_back(user);
 			}
 			sendToChan(cmd, user);
+			break ;
 		}
 		case OPER:
 		{
-			
 			std::string name = cmd.getParameters()[0];
 			std::string pwd;
 			User *other = NULL;
@@ -405,10 +404,18 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			if (!get_user_by_fd(event.data.fd)->getNickname().compare(name))
 			{
-				user->setMode("IRCOP", true);
-				display("MODE " + user->getNickname() + " +o", user);
-				reply(RPL_YOUREOPER, -1, user, &cmd, *this);
-				break ;
+				if (pwd.compare(IRCOpwd) != 0)
+				{
+					reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this);
+					break ;
+				}
+				if (pwd.compare(IRCOpwd) == 0)
+				{
+					user->setMode("IRCOP", true);
+					display("MODE " + user->getNickname() + " +o", user);
+					reply(RPL_YOUREOPER, -1, user, &cmd, *this);
+					break ;
+				}
 			}
 			std::map<std::string , User * >::iterator it = _users.find(name);
 			if (it != _users.end())

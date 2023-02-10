@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/09 17:07:07 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 02:37:08 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) /
 	std::stringstream errconvert;
 	
 	rplconvert << rplcode;
-	rplconvert << errcode;
+	errconvert << errcode;
 	
 	switch (rplcode)
 	{
@@ -39,20 +39,22 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server) /
 	switch (errcode)
 	{
 		case ERR_PASSWDMISMATCH:
-			err = ": Password incorect";
+			err = " : Password incorect";
 			break ;
 		case ERR_NEEDMOREPARAMS:
-			err = cmd->getName() + ": Not enough parameters";
+			err = cmd->getName() + " : Not enough parameters";
 			break ;
 		case ERR_NOSUCHNICK:
-			err = cmd->getParameters()[0] + ": No such nick/channel";
+			err = cmd->getParameters()[0] + " : No such nick/channel";
 			break ;
 		case ERR_USERSDONTMATCH:
-			err = ": Cant change mode for other users";
+			err = " : Cant change mode for other users";
 			break ;
 		case ERR_UMODEUNKNOWNFLAG:
-			err = ": Unknown MODE flag";
+			err = " : Unknown MODE flag";
 			break ;
+		case ERR_CANNOTSENDTOCHAN:
+			err = " : Cannot send to channel";
 		default:
 			break ;
 	}
