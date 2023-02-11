@@ -109,5 +109,6 @@ void    Channel::removeVChan(User *user)
 void    Channel::delUser(User *user)
 {
     std::vector<User *>::iterator it_vector_user = std::find(users.begin(), users.end(), user);
-    users.erase(it_vector_user);
+    if (it_vector_user != users.end())
+        users.erase(it_vector_user);
 }

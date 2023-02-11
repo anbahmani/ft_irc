@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 04:11:53 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:25:27 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,7 +244,7 @@ void	Server::BuildServer()
 						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
-					else if (x == -1)
+					if (x == -1)
 						delete user;
 				}
 			}
@@ -285,7 +285,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				std::string response = "CAP * ACK multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
-
     		}
 			else if (!(cmd.getParameters()[0].compare("END")))
 			{
@@ -306,12 +305,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
 				close(user->getFd());
-				return -1;
+				delete user;
+				break ;
 			}
 			else{
 				std::cout << _tmp_fds[user->getFd()];
 				_tmp_fds[user->getFd()] = true;
 			}
+			return -1;
 			break;
 		case USER:
 			user->setUsername(user->getNickname());
@@ -393,8 +394,11 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				sendToChan(cmd, user);
 				channels[channel]->delUser(user);
 				if (channels[channel]->getUser().size() < 1)
+				{
+					delete channels[channel];
 					channels.erase(channel);
 				}
+			}
 			
 			break ;
 		}
@@ -404,6 +408,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				_users.erase(user->getNickname());
 				close(event.data.fd);
 				(*num_event)--;
+				delete user;
 			break ;
 
 		
