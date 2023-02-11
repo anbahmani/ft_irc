@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 04:03:29 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:11:53 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -328,6 +328,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				return -1;
 			}
 			//On check si le nickname est deja utilise
+			_tmp_fds[user->getFd()] = false;
 			std::string tmp = cmd.getParameters()[0];
 			while (_users.find(tmp) != _users.end())
 				tmp.insert(0,"_");
@@ -428,6 +429,11 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 
 		case OPER:  // become IRCOp (admin IRC)
 		{
+			if (cmd.getNbParameters() < 2)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+				break ;
+			}
 			std::string pwd = cmd.getParameters()[1];
 			std::string name = cmd.getParameters()[0];
 			// name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
@@ -435,11 +441,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			std::map<std::string , User * >::iterator it = _users.find(name);
 			User *other = NULL;
 
-			if (cmd.getNbParameters() < 2)
-			{
-				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
-				break ;
-			}
 			if (it != _users.end())
 				other = it->second;
 			else
