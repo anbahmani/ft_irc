@@ -6,7 +6,7 @@
 /*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 04:25:27 by brhajji-         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:32:24 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ void Server::add_user(int server, int epoll_instance, int *num_sockets, epoll_ev
 	//On instancie un nouvel utilisateur
 
 	(void)(event);
-	std::cout<<"fd =>"<<user<<std::endl;
+	//std::cout<<"fd =>"<<user<<std::endl;
 	if (user < 0)
 	{
 		std::cerr << "Error:\tsyscall failed.";
@@ -211,10 +211,10 @@ void	Server::BuildServer()
 					User *user = NULL;
 					str = buffer;
 					int x = 1;
-					std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
+					//std::cout<<"<+++++++++++++++++++->"<<'\n'<<buffer<<"<+++++++++++++++++++>"<<'\n'<<'\n';
 					if (!get_user_by_fd(events[i].data.fd))
 					{
-						std::cout<<"fd non reconnu "<<events[i].data.fd<<"\n";
+						//std::cout<<"fd non reconnu "<<events[i].data.fd<<"\n";
 						user = new User(events[i].data.fd);
 						state = 0;
 					}
@@ -241,7 +241,7 @@ void	Server::BuildServer()
 					}
 					if (state == 0 && x == 0)
 					{
-						std::cout << "USER ADD" << std::endl;
+						//std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
 					if (x == -1)
@@ -278,13 +278,13 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			{
 				std::string response = "CAP * LS :multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
+				////std::cout<<"response : "<<response<<std::endl;
 			}
 			else if (!(cmd.getParameters()[0].compare("REQ")))
 			{
 				std::string response = "CAP * ACK multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
+				//std::cout<<"response : "<<response<<std::endl;
     		}
 			else if (!(cmd.getParameters()[0].compare("END")))
 			{
@@ -309,7 +309,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				break ;
 			}
 			else{
-				std::cout << _tmp_fds[user->getFd()];
+				//std::cout << _tmp_fds[user->getFd()];
 				_tmp_fds[user->getFd()] = true;
 			}
 			return -1;
@@ -346,13 +346,13 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 						response = ":"+user->getNickname()+" "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
 						display(response, (_users.find(cmd.getParameters()[0])->second));
 						display(response, user);
-						std::cout<<"response =>"<<response<<std::endl;
+						//std::cout<<"response =>"<<response<<std::endl;
 					}
 					else
 					{
 						response = ":localhost 401 "+user->getNickname()+" :No such Nickname\r\n";
 						send((_users.find(cmd.getParameters()[0])->second)->getFd(), response.c_str(), response.length(), 0);
-						std::cout<<"response =>"<<response<<std::endl;
+						//std::cout<<"response =>"<<response<<std::endl;
 					}
 				}
 			break;
@@ -366,7 +366,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 						response = ":"+user->getNickname()+" "+cmd.getParameters()[0]+' '+cmd.getMsg()+"\r\n";
 						display(response, (_users.find(cmd.getParameters()[0])->second));
 						//display(response, user);
-						std::cout<<"response =>"<<response<<std::endl;
+						//std::cout<<"response =>"<<response<<std::endl;
 					}
 				}
 			break;
@@ -374,7 +374,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				user->setPing(std::time(0));
 				response = "PONG localhost:"+_portNum+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
+				//std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PONG:
 				user->setPong(std::time(0));
@@ -382,7 +382,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case WHOIS:
 				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getNickname()+" localhost * "+user->getFullname()+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
-				std::cout<<"response : "<<response<<std::endl;
+				//std::cout<<"response : "<<response<<std::endl;
 			break;
 		case PART:
 		{
@@ -801,7 +801,7 @@ void Server::sendToChan(Command cmd, User *user)
 							response = ":"+user->getNickname()+"@localhost "+cmd.getName()+" #"+chan+' '+cmd.getMsg()+"\r\n";
 						send((*it_vector_user)->getFd(), response.c_str(), response.length(), 0);			
 					}
-					std::cout<<"response : "<<response<<std::endl;
+					//std::cout<<"response : "<<response<<std::endl;
 				}
 			}
 		}
@@ -842,7 +842,7 @@ void Server::pingAll()
 			ss<<std::time(0);
 			str = "PING "+ss.str()+" localhost:"+_portNum+"\r\n";
 			send(it->second->getFd(), str.c_str(), str.length(), 0);
-			std::cout<<"response : "<<str<<std::endl;
+			//std::cout<<"response : "<<str<<std::endl;
 		}
 	}
 }

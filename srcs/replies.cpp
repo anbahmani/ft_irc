@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/11 03:25:05 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:31:04 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,6 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			break;
 	}
 	
-	std::cout << errcode << std::endl;
 	switch (errcode)
 	{
 		case ERR_NOSUCHNICK:		//401
@@ -197,6 +196,6 @@ void	display(std::string to_display, User *user)
 {
 	to_display += "\r\n";
 
-	std::cout << to_display << std::endl;
+	//std::cout << to_display << std::endl;
 	send(user->getFd(), to_display.c_str(), to_display.length(), 0);
 }
