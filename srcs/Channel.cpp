@@ -46,3 +46,57 @@ void    Channel::addUser(User *user)
 {
     users.push_back(user);
 }
+
+void    Channel::addOpChan(User *user)
+{
+    if (user->get_op_chan() == true)
+        return ;
+    else
+    {
+        user->setModeChan("o", true);
+        operators.push_back(user);
+    } 
+}
+
+void    Channel::addVChan(User *user)
+{
+    if (user->get_v_chan() == true)
+        return ;
+    else
+    {
+        user->setModeChan("v", true);
+        v_speak.push_back(user);
+    }
+}
+
+void    Channel::addMChan(void)
+{
+    _m = true;
+    return ;
+}
+
+void    Channel::removeMChan(void)
+{
+    _m = false;
+    return ;
+}
+
+void    Channel::removeOpChan(User *user)
+{
+    std::vector<User *>::iterator it = std::find(operators.begin(), operators.end(), user);
+    if (user == *it)
+    {
+        user->setModeChan("o", false);
+        operators.erase(it);
+    }
+}
+
+void    Channel::removeVChan(User *user)
+{
+    std::vector<User *>::iterator it = std::find(v_speak.begin(), v_speak.end(), user);
+    if (user == *it)
+    {
+        user->setModeChan("v", false);
+        v_speak.erase(it);
+    }
+}

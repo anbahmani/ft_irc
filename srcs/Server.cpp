@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 14:09:17 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:47:41 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,25 +376,62 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break ;
 		}
 
+		case OPER:  // become IRCOp (admin IRC)
+		{
+			std::string pwd = cmd.getParameters()[1];
+			std::string name = cmd.getParameters()[0];
+			// name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			std::map<std::string , User * >::iterator it = _users.find(name);
+			User *other = NULL;
+
+			if (cmd.getNbParameters() < 2)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (it != _users.end())
+				other = it->second;
+			else
+			{
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) != 0)
+			{
+				reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) == 0)
+			{
+				other->setMode("IRCOP", true);
+				display("MODE " + other->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, other, &cmd, *this, NULL);
+			}
+			break ;
+		}
 		
 		case MODE:
 		{
 			std::string name = cmd.getParameters()[0];
 			std::string channel = "";
 			std::string mode = "";
+			std::string who = "";
 			Channel		*chan = NULL;
-			if (cmd.getNbParameters() > 1)
-				mode = cmd.getParameters()[1];
-			name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
-			name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
-			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
-
-			if (cmd.getNbParameters() < 1)
+			User		*other = NULL;
+			
+			if (cmd.getNbParameters() < 1) // mandatory check
 			{
 				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
 				break ;
 			}
-			if (name[0] == '#')
+			else if (cmd.getNbParameters() > 1)
+				mode = cmd.getParameters()[1];
+			name.erase(std::remove(name.begin(), name.end(), '\n'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), '\r'), name.end());
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			
+			if (name[0] == '#') // check if channel mode
 			{
 				channel = name.erase(0, 1);
 				std::map<std::string, Channel *>::iterator it = channels.find(channel);
@@ -409,56 +446,145 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 					mode = cmd.getParameters()[1];
 				else
 				{
+					// std::cout << cmd
 					reply(RPL_CHANNELMODEIS, -1, user, &cmd, *this, chan);
 					break ;
 				}
-				if (mode.find("+l") != std::string::npos || mode.find("-l") != std::string::npos)
-				{
-					if (mode.find("+") != std::string::npos)
-					{
-						
-					}
-					else
-					{
-						
-					}
-				}
+
+// set operator channel mode				
 				if (mode.find("+o") != std::string::npos || mode.find("-o") != std::string::npos)
 				{
+					if (cmd.getNbParameters() > 2)
+						who = cmd.getParameters()[2];
+					else
+						break ;
 					if (mode.find("+") != std::string::npos)
 					{
-						
+						std::map<std::string , User * >::iterator itt = _users.find(who);
+						if (itt != _users.end())
+							other = itt->second;
+						else
+							break ;
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->addOpChan(other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 					else
 					{
-						
+						std::map<std::string , User * >::iterator itt = _users.find(who);
+						if (itt != _users.end())
+							other = itt->second;
+						else
+							break ;
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->removeOpChan(other);
+							std::cout << cmd.getParameters()[0] << std::endl;
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 				}
+
 				if (mode.find("+m") != std::string::npos || mode.find("-m") != std::string::npos)
 				{
 					if (mode.find("+") != std::string::npos)
 					{
-						
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->addMChan();
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 					else
 					{
-						
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->removeMChan();
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 				}
+
 				if (mode.find("+v") != std::string::npos || mode.find("-v") != std::string::npos)
 				{
+					if (cmd.getNbParameters() > 2)
+						who = cmd.getParameters()[2];
+					else
+						break ;
 					if (mode.find("+") != std::string::npos)
 					{
-						
+						std::map<std::string , User * >::iterator itt = _users.find(who);
+						if (itt != _users.end())
+							other = itt->second;
+						else
+							break ;
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->addVChan(other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 					else
 					{
-						
+						std::map<std::string , User * >::iterator itt = _users.find(who);
+						if (itt != _users.end())
+							other = itt->second;
+						else
+							break ;
+						if (user->getIRCOp() == true || user->get_op_chan() == true)
+						{
+							chan->removeVChan(other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, other);
+							display(":" + user->getNickname() + " MODE " + cmd.getParameters()[0] + " " + mode, user);
+							break ;
+						}
+						else
+						{
+							reply(-1, ERR_CHANOPRIVISNEEDED, user, &cmd, *this, chan);
+							break ;
+						}
 					}
 				}
+				
 			}
 			if (cmd.getNbParameters() == 1 && name.compare(user->getNickname()) == 0)
 			{
+				std::cout << user->getMode() << std::endl;
 				reply(RPL_UMODEIS, -1, user, &cmd, *this, NULL);
 				break ;
 			}

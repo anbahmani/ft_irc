@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/10 06:54:50 by abahmani          #+#    #+#             */
-/*   Updated: 2023/02/10 13:47:52 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 22:38:59 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,15 +36,22 @@ class Channel
 	// void				add_user(void);
 
 	void    addUser(User *user); 
+	void	addOpChan(User *user);
+	void	addVChan(User *user);
+	void	addMChan();
+	
+	void	removeMChan();
+	void	removeOpChan(User *user);
+	void	removeVChan(User *user);
+
 	
 	private:
 
 	Server                		*_serv;
 	std::string           		name;
 	std::vector<User *>   		users;
-	// std::vector<User *>		operators;
-	// std::vector<User *>      can_speak;
-	// std::vector<User *>      limit_user;
+	std::vector<User *>		operators;
+	std::vector<User *>     v_speak;
 	bool						_l; //limit user
 	bool						_m; // canal modere
 	bool						_v; // enleve ou donne la possibilite de parler dans un canal moderer

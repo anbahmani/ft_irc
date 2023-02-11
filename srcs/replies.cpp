@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 13:59:26 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:38:33 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,8 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			rpl = "";
 			break ;
 		case RPL_UMODEIS:				//221
-			rpl = ": Your user mode is +" + user->getMode();
+			//rpl = ": Your user mode is +" + user->getMode();
+			rpl = ": +" + user->getMode();
 			break ;
 		case RPL_WHOISUSER:				//311
 			rpl = "";
@@ -63,7 +64,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			rpl = "";
 			break ;
 		case RPL_CHANNELMODEIS:			//324
-			rpl = cmd->getParameters()[0] + " " + chan->getModeChan();
+			rpl = " " + cmd->getParameters()[0] + " " + chan->getModeChan();
 			break ;
 		case RPL_NOTOPIC:				//331
 			rpl = "";
@@ -75,7 +76,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			rpl = "";
 			break ;
 		case RPL_INVITING:				//341
-			rpl = cmd->getParameters()[0] + " " + cmd->getParameters()[1];
+			rpl = " " + cmd->getParameters()[0] + " " + cmd->getParameters()[1];
 			break ;
 		case RPL_WHOREPLY:				//352
 			rpl = "";
@@ -123,7 +124,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 		case ERR_NOTEXTTOSEND:      //412
 			err = "";
 			break ;
-		case ERR_UNKNOWNCOMMAND:    //421
+		case ERR_UNKNOWNCOMMAND:    //421	std::string	rpl = "";
 			err = "";
 			break ;
 		case ERR_NONICKNAMEGIVEN:   //431
@@ -169,7 +170,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			err = "";
 			break ;
 		case ERR_CHANOPRIVISNEEDED: //482
-			err = cmd->getParameters()[0] + " :You're not channel operator";
+			err = " :You're not channel operator";
 			break ;
 		case ERR_UMODEUNKNOWNFLAG:	//501
 			err = " :Unknown MODE flag";
@@ -187,13 +188,16 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 		response = ":localhost:" + server.getPortNum() + ' ' + errconvert.str() + ' ' + user->getNickname() + ' ' + err + ' ' + '\n';
 
 	std::cout << response.c_str() << std::endl;
-	write(user->getFd(), response.c_str(), response.length());
-	// send(user->getFd(), response.c_str(), response.length(), 0);
+	std::cout << response.size() << std::endl;
+	// write(user->getFd(), response.c_str(), response.length());
+	send(user->getFd(), response.c_str(), response.length(), 0);
 	return ;
 }
 
 void	display(std::string to_display, User *user)
 {
 	to_display += "\r\n";
+
+	std::cout << to_display << std::endl;
 	send(user->getFd(), to_display.c_str(), to_display.length(), 0);
 }

@@ -6,13 +6,13 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 11:38:21 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:50:47 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/User.hpp"
 
-User::User(int fd) : fd(fd), _op(false), _i(true), _w(false)
+User::User(int fd) : fd(fd), _op(false), _i(true), _w(false), _op_chan(false), _v_chan(false)
 {
 }
 
@@ -75,6 +75,15 @@ std::string	User::getMode(void) const
 	return (mode);
 }
 
+bool	User::get_op_chan(void) const
+{
+	return (this->_op_chan);
+}
+
+bool	User::get_v_chan(void) const
+{
+	return (this->_op_chan);
+}
 
 // Setters
 
@@ -111,6 +120,14 @@ void User::setMode(std::string mode, bool state)
 			this->_op = state;
 	}
 	return ;
+}
+
+void	User::setModeChan(std::string mode, bool state)
+{
+	if (mode.find('o') != std::string::npos)
+		this->_op_chan = state;
+	else if (mode.find('v') != std::string::npos)
+		this->_v_chan = state;
 }
 
 void User::setChannel(std::string channel)

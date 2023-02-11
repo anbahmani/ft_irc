@@ -6,7 +6,7 @@
 /*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 11:38:15 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/10 17:50:43 by vahemere         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ class User
 		bool							_op;
 		bool							_i;
 		bool							_w;
+		bool							_op_chan;
+		bool							_v_chan;
 		std::vector<std::string>		channels;
 
 	public:
@@ -46,6 +48,8 @@ class User
 		std::string	getMode(void) const;
 		std::string	getChannel(void) const;
 		std::string getFullname(void);
+		bool		get_op_chan(void) const;
+		bool		get_v_chan(void) const;
 		
 
 		void setUsername(std::string);
@@ -53,6 +57,8 @@ class User
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);
 		void setChannel(std::string channel);
+		void setModeChan(std::string mode, bool state);
+
 		// Specific methods
 		void	writeMessage(std::string message);
 		void	addChannel(const std::string& channel);
