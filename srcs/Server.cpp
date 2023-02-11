@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 20:59:42 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:17:18 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -496,8 +496,49 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 					
 			break ;
 		}
-
-		
+		case OPER:
+		{
+			
+			std::string name = cmd.getParameters()[0];
+			std::string pwd;
+			User *other = NULL;
+			
+			name.erase(std::remove(name.begin(), name.end(), ':'), name.end());
+			if (cmd.getNbParameters() == 2)
+				pwd = cmd.getParameters()[1];
+			else if (cmd.getNbParameters() < 2)
+			{
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (!get_user_by_fd(event.data.fd)->getNickname().compare(name))
+			{
+				user->setMode("IRCOP", true);
+				display("MODE " + user->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, user, &cmd, *this, NULL);
+				break ;
+			}
+			std::map<std::string , User * >::iterator it = _users.find(name);
+			if (it != _users.end())
+				other = it->second;
+			else
+			{
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) != 0)
+			{
+				reply(-1, ERR_PASSWDMISMATCH, user, &cmd, *this, NULL);
+				break ;
+			}
+			if (pwd.compare(IRCOpwd) == 0)
+			{
+				other->setMode("IRCOP", true);
+				display("MODE " + other->getNickname() + " +o", user);
+				reply(RPL_YOUREOPER, -1, other, &cmd, *this, NULL);
+			}
+			break ;
+		}
 		case INVITE:
 		{
 			std::string name;
@@ -563,24 +604,33 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			std::string user_to_kill_name = cmd.getParameters()[0];
 			std::map<std::string, User *>::iterator it_vector_user = _users.find(user_to_kill_name);
-			if (it_vector_user == _users.end()){
+			if (it_vector_user == _users.end() || !_users[user_to_kill_name]){
 				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
 				break;
 			}
 			User *target = this->_users[user_to_kill_name];
 			std::map<std::string, Channel *>::iterator it_map_chann;
-			for (it_map_chann = channels.begin(); it_map_chann != channels.end(); it_map_chann++){
+			it_map_chann = channels.begin();
+			while ( it_map_chann != channels.end()){
 				std::vector<User *> vector_user = it_map_chann->second->getUser();
 				std::vector<User *>::iterator it_vector_users = std::find(vector_user.begin(), vector_user.end(), target);
 				if (it_vector_users != vector_user.end())
 					vector_user.erase(it_vector_users);
-				if (vector_user.size() < 1)
-					channels.erase(it_map_chann->first);
+				if (vector_user.size() < 1){
+					std::map<std::string, Channel *>::iterator it_tmp = it_map_chann;
+					it_map_chann++;
+					delete it_tmp->second;
+					channels.erase(it_tmp);
+				}
+				else
+					it_map_chann++;
 			}
+			close(target->getFd());
 			_users.erase(user_to_kill_name);
 			std::cout << "The user " << user->getNickname() << " has killed the user" << user_to_kill_name << "\r\n";
-			if (cmd.getNbParameters() > 1)
-				target->setComment(cmd.getParameters()[1]);
+			if (cmd.getNbParameters() > 1 && cmd.getMsg().size() > 1)
+				target->setComment(cmd.getMsg());
+			delete target;
 			break ;
 		}
 	}
