@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/10 17:41:27 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:21:08 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,8 +187,8 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 		response = ":localhost:" + server.getPortNum() + ' ' + errconvert.str() + ' ' + user->getNickname() + ' ' + err + ' ' + '\n';
 
 	std::cout << response.c_str() << std::endl;
-	write(user->getFd(), response.c_str(), response.length());
-	// send(user->getFd(), response.c_str(), response.length(), 0);
+	//write(user->getFd(), response.c_str(), response.length());
+	send(user->getFd(), response.c_str(), response.length(), 0);
 	return ;
 }
 

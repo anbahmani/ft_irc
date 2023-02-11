@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/10 06:54:50 by abahmani          #+#    #+#             */
-/*   Updated: 2023/02/10 13:47:52 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 00:06:47 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class Channel
 	// void				add_user(void);
 
 	void    addUser(User *user); 
+	void	delUser(User *user);
 	
 	private:
 

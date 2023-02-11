@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:12 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 17:57:57 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:20:52 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ class User
 		bool							_i;
 		bool							_w;
 		std::vector<std::string>		channels;
+		time_t							lastPong;
+		time_t							lastPing;
+		int								state;
 
 	public:
 		// Constructors
@@ -39,9 +42,12 @@ class User
 
 		//Getters
 		int			getFd(void);
-		std::string	getUsername(void);
-		std::string	getNickname(void);
-		bool		getIRCOp(void);
+		std::string getUsername(void);
+		std::string getNickname(void);
+		time_t		getPong();
+		time_t		getPing();
+		int			getstate();
+		bool 		getIRCOp(void);
 		bool 		get_i(void) const;
 		bool 		get_w(void) const;
 		std::string	getMode(void) const;
@@ -51,6 +57,9 @@ class User
 		
 
 		void setUsername(std::string);
+		void setPong(time_t);
+		void setPing(time_t);
+		void setstate(int);
 		void setFullname(std::string);
 		void setNickname(std::string nickname);
 		void setMode(std::string mode, bool state);

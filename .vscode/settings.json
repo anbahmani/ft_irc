@@ -17,6 +17,10 @@
 		"cstdio": "cpp",
 		"cstdlib": "cpp",
 		"cstring": "cpp",
+<<<<<<< HEAD
+=======
+		"ctime": "cpp",
+>>>>>>> origin/nc
 		"cwchar": "cpp",
 		"cwctype": "cpp",
 		"deque": "cpp",
@@ -52,7 +56,11 @@
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"cinttypes": "cpp",
+<<<<<<< HEAD
 		"typeinfo": "cpp",
 		"ctime": "cpp"
+=======
+		"typeinfo": "cpp"
+>>>>>>> origin/nc
 	}
 }

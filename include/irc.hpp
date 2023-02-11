@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/30 13:53:49 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 17:23:39 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 01:20:35 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,12 @@
 # include <sys/epoll.h>
 # include <sstream>
 # include <csignal>
+# include <ctime>
 # include "User.hpp"
 # include "Server.hpp"
 # include "Command.hpp"
 # include "Channel.hpp"
+
 
 class Server;
 extern bool g_signal;
