@@ -6,7 +6,7 @@
 /*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:20 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/10 08:09:56 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 02:40:36 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,14 +46,16 @@ class Server
 		std::map<std::string, User *>	getUsers(void) const;
 		void 				add_user(int server, int epoll_instance, int *num_sockets, epoll_event event);
 		User				*get_user_by_fd(int fd);
-		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc);
+		int					execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event);
 		void				join(Command cmd, User *user, std::string response);
 		void				part(Command cmd, User *user, std::string response);
 		static void			signal_handler(int);
+		void 				checkDeath(int *num_event);
+		void 				pingAll();
 		
 	private:
 	
-		std::vector<pollfd> _user_fds;
+		bool _tmp_fds[100];
 		std::map<std::string, User *>	_users;
 		std::map<std::string, Channel *> channels;
 		struct sockaddr_in	_server_addr;
@@ -105,6 +107,7 @@ int		whois();
 #define		MODE	12
 #define		PRIVMSG	13
 #define		NOTICE	14
+#define		KILL	15
 
 
 #define		RPL_WELCOME					001

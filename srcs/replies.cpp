@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   replies.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/07 11:59:10 by vahemere          #+#    #+#             */
-/*   Updated: 2023/02/11 01:38:33 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 03:25:05 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,7 +167,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 			err = " :Bad Channel Key ";
 			break ;
 		case ERR_NOPRIVILEGES:      //481
-			err = "";
+			err = ":Your host has no privileges to perform the requested action";
 			break ;
 		case ERR_CHANOPRIVISNEEDED: //482
 			err = " :You're not channel operator";
@@ -188,8 +188,7 @@ void	reply(int rplcode, int errcode, User *user, Command *cmd, Server &server, C
 		response = ":localhost:" + server.getPortNum() + ' ' + errconvert.str() + ' ' + user->getNickname() + ' ' + err + ' ' + '\n';
 
 	std::cout << response.c_str() << std::endl;
-	std::cout << response.size() << std::endl;
-	// write(user->getFd(), response.c_str(), response.length());
+	//write(user->getFd(), response.c_str(), response.length());
 	send(user->getFd(), response.c_str(), response.length(), 0);
 	return ;
 }

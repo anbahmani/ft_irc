@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/10 06:54:50 by abahmani          #+#    #+#             */
-/*   Updated: 2023/02/10 22:38:59 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 03:20:25 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class Channel
 	void	removeOpChan(User *user);
 	void	removeVChan(User *user);
 
+	void	delUser(User *user);
 	
 	private:
 

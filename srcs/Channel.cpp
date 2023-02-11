@@ -10,7 +10,7 @@ Channel::~Channel() {}
 //getters
 std::vector<User *>    Channel::getUser(void) const
 {
-    return (this->users);
+    return (users);
 }
 
 std::string             Channel::getModeChan(void) const
@@ -99,4 +99,10 @@ void    Channel::removeVChan(User *user)
         user->setModeChan("v", false);
         v_speak.erase(it);
     }
+}
+
+void    Channel::delUser(User *user)
+{
+    std::vector<User *>::iterator it_vector_user = std::find(users.begin(), users.end(), user);
+    users.erase(it_vector_user);
 }

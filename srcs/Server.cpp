@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vahemere <vahemere@student.42.fr>          +#+  +:+       +#+        */
+/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 01:47:41 by vahemere         ###   ########.fr       */
+/*   Updated: 2023/02/11 03:24:25 by abahmani         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,11 @@
 # define PRINT_FUNC() std::cout << "[\033[36m" << __FUNCTION__ << "\033[0m] "\
   << __FILENAME__ << std::endl;
 
-Server::Server(char *port, std::string pass) : _server_socket(0), _portNum(port), _password(pass), _name(SERVER_NAME), _rc(0){}
+Server::Server(char *port, std::string pass) : _server_socket(0), _portNum(port), _password(pass), _name(SERVER_NAME), _rc(0){
+	for (int i = 0; i < 100; i++){
+		_tmp_fds[i] = false;
+	}
+}
 
 Server::Server(void) : _name(SERVER_NAME){}
 
@@ -37,13 +41,14 @@ Server::~Server() {
 		close(_server_socket);
 	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
 		delete it->second;
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		delete it->second;
 	if (_rc > 0)
 		close(_rc);
 }
 
 Server &Server::operator=(const Server &server){
 	if (this != &server){
-		_user_fds = server._user_fds;
 		_users = server._users;
 		channels = server.channels;
 		_server_addr = server._server_addr;
@@ -132,6 +137,7 @@ void	Server::BuildServer()
 	struct epoll_event server_event;
 	char		buffer[1024];
 	int			tmp = 0;
+	//time_t		current = std::time(0);
 	int			optval = 1;
 	// Creation socket
 	if ((_server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0){	//AF_INET => adresse ip v4 || sock_stream protocole tcp
@@ -178,6 +184,7 @@ void	Server::BuildServer()
 	int		state = 0;
 	while (!g_signal)
 	{
+		//pingAll();
 		num_event = epoll_wait(this->_rc, events, num_socket, -1);
 		for (int i = 0; i < num_event; i++)
 		{
@@ -190,11 +197,13 @@ void	Server::BuildServer()
 				tmp = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (tmp <= 0)
 				{
-					std::cout << "Connection closed by user2." << std::endl;
+					std::cout << "Connection closed by client." << std::endl;
 					//Suppresion du socket de l'epoll
 					epoll_ctl(this->_rc, EPOLL_CTL_DEL, events[i].data.fd, &events[i]);
-					_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
+					if (get_user_by_fd(events[i].data.fd))
+						_users.erase(get_user_by_fd(events[i].data.fd)->getNickname());
 					close(events[i].data.fd);
+					num_event--;
 				}
 				else
 				{
@@ -214,28 +223,54 @@ void	Server::BuildServer()
 						state = 1;
 						user = get_user_by_fd(events[i].data.fd);
 					}
-					while ((pos = str.find('\n')) != std::string::npos)
+					if (str.find("\r\n") == std::string::npos)
 					{
-						Command cmd(str.substr(0, pos - 1));
-						if(execute_cmd(cmd, user, events[i], this->_rc) == 0)
+						Command cmd(str.substr(0, str.find('\n')));
+						if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
 							x = 0;
-						str.erase(0, pos + 1);
+					}
+					else
+					{
+						while ((pos = str.find('\n')) != std::string::npos)
+						{
+							Command cmd(str.substr(0, pos - 1));
+							if(execute_cmd(cmd, user, events[i], this->_rc, &num_event) == 0)
+								x = 0;
+							str.erase(0, pos + 1);
+						}
 					}
 					if (state == 0 && x == 0)
 					{
 						std::cout << "USER ADD" << std::endl;
 						_users.insert(std::pair<std::string, User *>(user->getNickname(), user));
 					}
+					else if (x == -1)
+						delete user;
 				}
 			}
 		}
+		// if (std::time(0) % 30 == 0)
+		// {
+		// 	std::cout<<"Activity check.\n";
+		// 	pingAll();
+		// 	current = std::time(0);
+		// }
+		// checkDeath(&num_event);
     }
 	(void) (num_socket);
 }
 
-int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc)
+int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int rc, int *num_event)
 {
 	std::string response;
+	// std::cout<<"test = "<<cmd.cmds.find(cmd.getName())->second<<std::endl;;
+	// 		std::cout<<cmd.getName()<<std::endl;
+	// std::vector<std::string> param = cmd.getParameters();
+	// for (std::vector<std::string>::iterator iter = param.begin(); iter < param.end(); iter++)
+	// 	std::cout<<"param => "<<*iter<<"|"<<std::endl;
+	// std::cout<<std::endl;
+	if (cmd.cmds.find(cmd.getName()) == cmd.cmds.end())
+		return 2;
 	switch (cmd.cmds.find(cmd.getName())->second)
 	{
 		case CAP:
@@ -245,14 +280,14 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 			}
-			if (!(cmd.getParameters()[0].compare("REQ")))
+			else if (!(cmd.getParameters()[0].compare("REQ")))
 			{
 				std::string response = "CAP * ACK multi-prefix\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
 
     		}
-			if (!(cmd.getParameters()[0].compare("END")))
+			else if (!(cmd.getParameters()[0].compare("END")))
 			{
 					std::string response = ":localhost:"+_portNum+" 001 "+(user->getNickname())+": Bienvenue sur Chat Irc\r\n";
 					send(user->getFd(), response.c_str(), response.length(), 0);
@@ -267,11 +302,15 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		case PASS:
 			if ((cmd.getParameters()[0].compare(_password)))
 			{
-				//std::cout << "user => server: " << data << std::endl;
 				std::string response = "PASS rejected\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
-				return 0;
+				close(user->getFd());
+				return -1;
+			}
+			else{
+				std::cout << _tmp_fds[user->getFd()];
+				_tmp_fds[user->getFd()] = true;
 			}
 			break;
 		case USER:
@@ -280,13 +319,20 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			break;
 		case NICK:
 		{
+			if (!_tmp_fds[user->getFd()])
+			{
+				std::string response = "PASS NEEDED\r\n";
+				send(user->getFd(), response.c_str(), response.length(), 0);
+				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
+				close(user->getFd());
+				return -1;
+			}
 			//On check si le nickname est deja utilise
 			std::string tmp = cmd.getParameters()[0];
 			while (_users.find(tmp) != _users.end())
 				tmp.insert(0,"_");
 			user->setNickname(tmp);
 			return 0;
-			break;
 		}
 		case PRIVMSG:
 				if (cmd.getParameters().size() > 1 && cmd.getParameters()[0][0] == '#')//msg to channel
@@ -323,9 +369,13 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				}
 			break;
 		case PING:
+				user->setPing(std::time(0));
 				response = "PONG localhost:"+_portNum+"\r\n";
 				send(user->getFd(), response.c_str(), response.length(), 0);
 				std::cout<<"response : "<<response<<std::endl;
+			break;
+		case PONG:
+				user->setPong(std::time(0));
 			break;
 		case WHOIS:
 				response = ":localhost 311 "+cmd.getParameters()[0]+' '+user->getNickname()+' '+user->getNickname()+" localhost * "+user->getFullname()+"\r\n";
@@ -336,16 +386,15 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 		{
 			std::string channel = cmd.getParameters()[0].c_str() + 1;
 			std::map<std::string, Channel *>::iterator it = channels.find(channel);
-			if (it != channels.end()) {
+			if (it != channels.end() && channels[channel]) {
 				std::cout << "The user " << user->getNickname() << " quits the channel " << channel << "\r\n";
 				user->setChannel("");
 				sendToChan(cmd, user);
-				std::vector<User *> vector_user = channels[channel]->getUser();
-				std::vector<User *>::iterator it_vector_user = std::find(vector_user.begin(), vector_user.end(), user);
-				vector_user.erase(it_vector_user);
-				if (vector_user.size() < 1)
+				channels[channel]->delUser(user);
+				if (channels[channel]->getUser().size() < 1)
 					channels.erase(channel);
-			}
+				}
+			
 			break ;
 		}
 		case QUIT: //logout
@@ -353,6 +402,7 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 				epoll_ctl(rc, EPOLL_CTL_DEL, user->getFd(), &event);
 				_users.erase(user->getNickname());
 				close(event.data.fd);
+				(*num_event)--;
 			break ;
 
 		
@@ -617,8 +667,6 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 					
 			break ;
 		}
-
-		
 		case INVITE:
 		{
 			std::string name;
@@ -672,7 +720,49 @@ int	Server::execute_cmd(Command cmd, User *user, struct epoll_event event, int r
 			}
 			break ;
 		}
+		case KILL:
+		{
+			if (cmd.getNbParameters() < 1){
+				reply(-1, ERR_NEEDMOREPARAMS, user, &cmd, *this, NULL);
+				break;
+			}
+			if (!user->getIRCOp()){
+				reply(-1, ERR_NOPRIVILEGES, user, &cmd, *this, NULL);
+				break;
+			}
+			std::string user_to_kill_name = cmd.getParameters()[0];
+			std::map<std::string, User *>::iterator it_vector_user = _users.find(user_to_kill_name);
+			if (it_vector_user == _users.end() || !_users[user_to_kill_name]){
+				reply(-1, ERR_NOSUCHNICK, user, &cmd, *this, NULL);
+				break;
+			}
+			User *target = this->_users[user_to_kill_name];
+			std::map<std::string, Channel *>::iterator it_map_chann;
+			it_map_chann = channels.begin();
+			while ( it_map_chann != channels.end()){
+				std::vector<User *> vector_user = it_map_chann->second->getUser();
+				std::vector<User *>::iterator it_vector_users = std::find(vector_user.begin(), vector_user.end(), target);
+				if (it_vector_users != vector_user.end())
+					vector_user.erase(it_vector_users);
+				if (vector_user.size() < 1){
+					std::map<std::string, Channel *>::iterator it_tmp = it_map_chann;
+					it_map_chann++;
+					delete it_tmp->second;
+					channels.erase(it_tmp);
+				}
+				else
+					it_map_chann++;
+			}
+			close(target->getFd());
+			_users.erase(user_to_kill_name);
+			std::cout << "The user " << user->getNickname() << " has killed the user" << user_to_kill_name << "\r\n";
+			if (cmd.getNbParameters() > 1 && cmd.getMsg().size() > 1)
+				target->setComment(cmd.getMsg());
+			delete target;
+			break ;
+		}
 	}
+	(void)(*num_event);
 	return 1;
 }
 
@@ -684,13 +774,14 @@ void Server::sendToChan(Command cmd, User *user)
 		std::string chan = cmd.getParameters()[0].c_str() + 1;
 		std::map<std::string, Channel *>::iterator it = channels.find(chan);
 		//check if the chan exist and if the user is on it
-		if (it != channels.end() )
+		if (it != channels.end() && channels[chan])
 		{
 			std::vector<User *> vector_user = channels[chan]->getUser();
 			if (std::find(vector_user.begin(), vector_user.end(), user) != vector_user.end())
 			{	
 				for (std::vector<User *>::iterator it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
 				{
+					std::cout<<"test\n";
 					if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
 					{
 						if (!cmd.getName().compare("PRIVMSG"))
@@ -705,5 +796,42 @@ void Server::sendToChan(Command cmd, User *user)
 		}
 		return ;
 	}
-	return (reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, *this, NULL));
+	return (reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, (*this), channels[cmd.getParameters()[0].c_str() + 1]));
+}
+
+void Server::checkDeath(int *num_event)
+{
+	std::string str;
+	User	*tmp;
+	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (it->second->getPong() + 60 < std::time(0) && it->second->getPing() + 60 < std::time(0))
+		{
+			tmp = it->second;
+			std::cout << "Connection lost by "<< tmp->getNickname()<< std::endl;
+			//Suppresion du socket de l'epoll
+			epoll_ctl(this->_rc, EPOLL_CTL_DEL, tmp->getFd(), NULL);
+			close(tmp->getFd());
+			_users.erase(tmp->getNickname());
+			delete tmp;
+			(*num_event)--;
+		}
+	}
+	(void)(num_event);
+}
+
+void Server::pingAll()
+{
+	std::string str;
+	std::stringstream ss;
+	for (std::map<std::string, User *>::iterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (it->second->getPing() + 30 < std::time(0))
+		{
+			ss<<std::time(0);
+			str = "PING "+ss.str()+" localhost:"+_portNum+"\r\n";
+			send(it->second->getFd(), str.c_str(), str.length(), 0);
+			std::cout<<"response : "<<str<<std::endl;
+		}
+	}
 }
