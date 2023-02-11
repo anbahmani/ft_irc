@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/10 06:54:50 by abahmani          #+#    #+#             */
-/*   Updated: 2023/02/11 03:20:25 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:00:06 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ class Channel
 	~Channel();
 
 	std::vector<User *> getUser(void) const;
+	std::vector<User *> getOpUser(void) const;
 	std::string			getModeChan(void) const;
 
 	void				setModeChan(std::string mode, bool state);

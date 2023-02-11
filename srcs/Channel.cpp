@@ -13,6 +13,11 @@ std::vector<User *>    Channel::getUser(void) const
     return (users);
 }
 
+std::vector<User *>    Channel::getOpUser(void) const
+{
+    return (operators);
+}
+
 std::string             Channel::getModeChan(void) const
 {
     std::string mode = "+";

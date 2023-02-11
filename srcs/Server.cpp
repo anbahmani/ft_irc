@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 06:27:10 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 03:24:25 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 04:03:29 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -779,9 +779,14 @@ void Server::sendToChan(Command cmd, User *user)
 			std::vector<User *> vector_user = channels[chan]->getUser();
 			if (std::find(vector_user.begin(), vector_user.end(), user) != vector_user.end())
 			{	
+				if (!cmd.getName().compare("PRIVMSG") && channels[chan]->getModeChan().find('m') != std::string::npos)
+				{
+					std::vector<User *> vec = channels[chan]->getOpUser();
+					if (!user->get_v_chan() && !user->getIRCOp() && std::find(vec.begin(), vec.end(), user) == vec.end())
+						return reply(-1, ERR_CANNOTSENDTOCHAN, user, &cmd, (*this), channels[cmd.getParameters()[0].c_str() + 1]);
+				}
 				for (std::vector<User *>::iterator it_vector_user = vector_user.begin(); it_vector_user < vector_user.end(); it_vector_user++)
 				{
-					std::cout<<"test\n";
 					if ((*it_vector_user)->getFd() != user->getFd() || !cmd.getName().compare("PART"))
 					{
 						if (!cmd.getName().compare("PRIVMSG"))

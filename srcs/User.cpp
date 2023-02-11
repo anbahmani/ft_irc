@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abahmani <abahmani@student.42.fr>          +#+  +:+       +#+        */
+/*   By: brhajji- <brhajji-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/02 08:27:09 by brhajji-          #+#    #+#             */
-/*   Updated: 2023/02/11 03:34:32 by abahmani         ###   ########.fr       */
+/*   Updated: 2023/02/11 03:55:47 by brhajji-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ bool	User::get_op_chan(void) const
 
 bool	User::get_v_chan(void) const
 {
-	return (this->_op_chan);
+	return (this->_v_chan);
 }
 std::string User::getComment(void) const {
 	return (this->comment);
